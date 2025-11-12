@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /
+
+# временно запрещаем индексировать тестовую версию
+# после публикации заменим на Allow: /
+# Sitemap: https://kaltrium.site/sitemap.xml
