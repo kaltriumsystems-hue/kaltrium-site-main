@@ -14,7 +14,9 @@ const PLANS: Plan[] = [
 function countWords(text: string) {
   const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   if (!normalized) return 0;
-  const matches = normalized.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g);
+  const matches = normalized.match(
+    /[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g
+  );
   return matches ? matches.length : 0;
 }
 
@@ -37,9 +39,25 @@ function selectPlan(words: number): Plan | null {
   return null;
 }
 
+// Тип превью-ответа от API
+type PreviewResponse = {
+  ok: boolean;
+  lang: string;
+  qa: { grammar: number; clarity: number; tone: number; brand_fit: number };
+  avg: number;
+  preview: string;
+  error?: string;
+};
+
 export default function UploadPage() {
   const [text, setText] = useState("");
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  // NEW: стейт для API
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   const words = useMemo(() => countWords(text), [text]);
   const plan = useMemo(() => selectPlan(words), [words]);
@@ -49,6 +67,9 @@ export default function UploadPage() {
   // Проверка PDF
   function handlePdfUpload(file: File | null) {
     setPdfError(null);
+    setApiError(null);
+    setPreviewData(null);
+
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       setPdfError("PDF is too large (max 2 MB).");
@@ -58,8 +79,103 @@ export default function UploadPage() {
       setPdfError("Only PDF files are allowed.");
       return;
     }
-    // здесь позже добавим извлечение текста/предпросмотр pdf
+    // здесь позже добавим реальную отправку PDF
     alert(`PDF accepted: ${file.name}`);
+  }
+
+  // NEW: запрос превью
+  async function handleGetPreview() {
+    if (!canPreview) return;
+    setApiError(null);
+    setPreviewData(null);
+    setIsPreviewLoading(true);
+
+    try {
+      const res = await fetch("/api/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, preview: true }),
+      });
+
+      if (!res.ok) {
+        let msg = "Preview failed.";
+        try {
+          const data = await res.json();
+          if (data?.error) msg = data.error;
+        } catch {
+          // ignore
+        }
+        setApiError(msg);
+        return;
+      }
+
+      const data = (await res.json()) as PreviewResponse;
+      if (!data.ok) {
+        setApiError(data.error || "Preview failed.");
+        return;
+      }
+
+      setPreviewData(data);
+    } catch (err) {
+      console.error(err);
+      setApiError("Network error. Please try again.");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  }
+
+  // NEW: запрос полного PDF (пока вместо оплаты)
+  async function handleGetPdf() {
+    if (!canPreview) return;
+    setApiError(null);
+    setIsPdfLoading(true);
+
+    try {
+      const res = await fetch("/api/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, preview: false }),
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+
+      if (!res.ok) {
+        // Если бэк вернул JSON-ошибку
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          setApiError(data?.error || "Request failed.");
+        } else {
+          setApiError("Request failed.");
+        }
+        return;
+      }
+
+      if (contentType.includes("application/pdf")) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "kaltrium-refined.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data?.error) {
+          setApiError(data.error);
+        } else {
+          setApiError("Unexpected response from server.");
+        }
+      } else {
+        setApiError("Unexpected response type from server.");
+      }
+    } catch (err) {
+      console.error(err);
+      setApiError("Network error. Please try again.");
+    } finally {
+      setIsPdfLoading(false);
+    }
   }
 
   return (
@@ -168,52 +284,51 @@ export default function UploadPage() {
           </div>
         </div>
 
-        {/* WARNINGS */}
+        {/* WARNINGS / ERRORS */}
         {pdfError && (
           <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
             {pdfError}
           </p>
         )}
-        {!overLimit && words === 0 && !pdfError && (
+        {apiError && (
+          <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
+            {apiError}
+          </p>
+        )}
+        {!overLimit && words === 0 && !pdfError && !apiError && (
           <p className="mt-4 text-sm text-[#666]">
             Start by pasting your text — we’ll show the plan and price automatically.
           </p>
         )}
 
-                      {/* ACTIONS */}
+        {/* ACTIONS */}
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
           {/* PREVIEW BUTTON */}
           <button
-            disabled={!canPreview}
+            disabled={!canPreview || isPreviewLoading}
             className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
               ${
-                canPreview
+                canPreview && !isPreviewLoading
                   ? "bg-[#d6c4a3] text-black shadow-[0_8px_20px_rgba(214,196,163,0.4)] hover:bg-[#cbb993] hover:shadow-[0_10px_24px_rgba(214,196,163,0.55)] active:scale-[0.98]"
                   : "bg-[#f3f3f3] text-[#999] cursor-not-allowed shadow-none"
               }`}
-            onClick={() => {
-              alert(
-                `Preview (first part only): ${words.toLocaleString()} words, plan ${plan?.name ?? "—"}.`
-              );
-            }}
+            onClick={handleGetPreview}
           >
-            Get preview
+            {isPreviewLoading ? "Getting preview…" : "Get preview"}
           </button>
 
-          {/* PAYMENT BUTTON */}
+          {/* PAYMENT / FULL PDF BUTTON */}
           <button
-            disabled={!canPreview}
+            disabled={!canPreview || isPdfLoading}
             className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
               ${
-                canPreview
+                canPreview && !isPdfLoading
                   ? "bg-white border border-[#d6c4a3] text-black hover:bg-[#fdfaf5] hover:shadow-[0_8px_20px_rgba(214,196,163,0.35)] active:scale-[0.98]"
                   : "bg-white border border-[#e5e5e5] text-[#999] cursor-not-allowed shadow-none"
               }`}
-            onClick={() => {
-              alert(`Proceed to payment for plan ${plan?.name ?? "—"}.`);
-            }}
+            onClick={handleGetPdf}
           >
-            Continue to payment
+            {isPdfLoading ? "Preparing PDF…" : "Continue to payment"}
           </button>
         </div>
 
@@ -223,7 +338,31 @@ export default function UploadPage() {
           payment.
         </p>
 
-            {/* SECURITY LINE */}
+        {/* NEW: блок с превью / QA */}
+        {previewData && (
+          <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#fafafa] p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#666]">
+                  Preview · Language: {previewData.lang.toUpperCase()}
+                </p>
+                <p className="mt-1 text-sm text-[#333] whitespace-pre-line">
+                  {previewData.preview}
+                </p>
+              </div>
+              <div className="text-sm text-right">
+                <p className="font-semibold">QA: {previewData.avg}/100</p>
+                <p className="text-xs text-[#666]">
+                  Grammar {previewData.qa.grammar} · Clarity {previewData.qa.clarity}
+                  <br />
+                  Tone {previewData.qa.tone} · Brand fit {previewData.qa.brand_fit}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SECURITY LINE */}
         <div className="mt-8 flex flex-col items-center gap-1">
           <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
@@ -236,6 +375,7 @@ export default function UploadPage() {
     </main>
   );
 }
+
 
 
 
