@@ -66,6 +66,11 @@ if (MAINTENANCE) {
           Proofreader & Editor for business and marketing texts — crafted for clarity, confidence, and precision.
         </p>
 
+        <p className="text-sm text-gray-500 mt-2">
+           Works in English, German, and Russian.
+         </p>
+
+
         {/* CTA buttons (живые) */}
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <a
