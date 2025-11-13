@@ -180,39 +180,50 @@ export default function UploadPage() {
           </p>
         )}
 
-        {/* ACTIONS */}
-        <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+                      {/* ACTIONS */}
+        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+          {/* PREVIEW BUTTON */}
           <button
             disabled={!canPreview}
             className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
-                        shadow-[0_4px_10px_rgba(214,196,163,0.4)]
-                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]
-              ${canPreview
-                ? "bg-[#d6c4a3] text-black hover:bg-[#cbb993] hover:shadow-[0_8px_20px_rgba(214,196,163,0.5)] active:scale-[0.98] active:brightness-95"
-                : "bg-[#eee] text-[#999] cursor-not-allowed shadow-none"}`}
+              ${
+                canPreview
+                  ? "bg-[#d6c4a3] text-black shadow-[0_8px_20px_rgba(214,196,163,0.4)] hover:bg-[#cbb993] hover:shadow-[0_10px_24px_rgba(214,196,163,0.55)] active:scale-[0.98]"
+                  : "bg-[#f3f3f3] text-[#999] cursor-not-allowed shadow-none"
+              }`}
             onClick={() => {
-              alert(`Preview: ${words.toLocaleString()} words → ${plan?.name ?? "—"}`);
+              alert(
+                `Preview (first part only): ${words.toLocaleString()} words, plan ${plan?.name ?? "—"}.`
+              );
             }}
           >
             Get preview
           </button>
 
+          {/* PAYMENT BUTTON */}
           <button
             disabled={!canPreview}
             className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
-                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]
-              ${canPreview
-                ? "bg-white border border-[#d6c4a3] hover:bg-[#fdfaf5] hover:shadow-[0_6px_16px_rgba(214,196,163,0.35)] active:scale-[0.98]"
-                : "bg-white border border-[#e5e5e5] text-[#999] cursor-not-allowed"}`}
+              ${
+                canPreview
+                  ? "bg-white border border-[#d6c4a3] text-black hover:bg-[#fdfaf5] hover:shadow-[0_8px_20px_rgba(214,196,163,0.35)] active:scale-[0.98]"
+                  : "bg-white border border-[#e5e5e5] text-[#999] cursor-not-allowed shadow-none"
+              }`}
             onClick={() => {
-              alert(`Proceed to payment: ${plan?.name ?? "—"}`);
+              alert(`Proceed to payment for plan ${plan?.name ?? "—"}.`);
             }}
           >
             Continue to payment
           </button>
         </div>
 
-        {/* SECURITY LINE */}
+        {/* PREVIEW NOTE */}
+        <p className="mt-3 text-center text-xs text-[#666]">
+          Preview shows only the first part of your refined text. The full edited, branded PDF is delivered after
+          payment.
+        </p>
+
+            {/* SECURITY LINE */}
         <div className="mt-8 flex flex-col items-center gap-1">
           <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
