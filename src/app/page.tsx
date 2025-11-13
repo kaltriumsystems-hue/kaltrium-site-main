@@ -22,7 +22,7 @@ export const metadata = {
     type: "website",
   },
 };
-const MAINTENANCE = true;
+const MAINTENANCE = false;
 
 export default function Page() {
 if (MAINTENANCE) {
