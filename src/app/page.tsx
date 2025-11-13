@@ -22,8 +22,22 @@ export const metadata = {
     type: "website",
   },
 };
+const MAINTENANCE = true;
 
 export default function Page() {
+if (MAINTENANCE) {
+  return (
+    <main className="flex min-h-screen items-center justify-center p-8">
+      <div className="text-center max-w-md">
+        <h1 className="text-3xl font-bold mb-4">Coming Soon</h1>
+        <p className="text-lg text-gray-600">
+          The service is being prepared. Check back soon!
+        </p>
+      </div>
+    </main>
+  );
+}
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#f8f8f7] to-[#eaeaea] text-[#111]">
       {/* NAVBAR */}
