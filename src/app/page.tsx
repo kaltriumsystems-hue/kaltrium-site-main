@@ -66,10 +66,6 @@ if (MAINTENANCE) {
           Proofreader & Editor for business and marketing texts — crafted for clarity, confidence, and precision.
         </p>
 
-        <p className="text-sm text-gray-500 mt-2">
-           Works in English, German, and Russian.
-         </p>
-
 
         {/* CTA buttons (живые) */}
         <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -95,6 +91,7 @@ if (MAINTENANCE) {
               Grammar, tone, and clarity — refined for business impact.
             </p>
           </div>
+
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#cfcfcf]">
             <div className="text-xl font-semibold text-black mb-2">Marketing-Ready</div>
             <p className="text-[#444] text-sm leading-relaxed">
@@ -107,6 +104,10 @@ if (MAINTENANCE) {
               Receive a clean, branded PDF with tracked suggestions in minutes.
             </p>
           </div>
+          <div className="text-sm text-gray-500">
+         EN · DE · RU supported
+          </div>
+
         </div>
       </section>
 
