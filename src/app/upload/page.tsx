@@ -1,5 +1,10 @@
 "use client";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
+  "https://kaltrium-editor-bot.onrender.com";
+
+
 import { useMemo, useState } from "react";
 
 type Plan = { name: string; price: number; maxWords: number; border?: string; bg?: string };
