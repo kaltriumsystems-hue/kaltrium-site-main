@@ -96,11 +96,12 @@ export default function UploadPage() {
     setIsPreviewLoading(true);
 
     try {
-      const res = await fetch("/api/refine", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, preview: true }),
-      });
+     const res = await fetch(`${API_BASE}/api/refine`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text, preview: true }),
+});
+
 
       if (!res.ok) {
         let msg = "Preview failed.";
@@ -136,7 +137,7 @@ export default function UploadPage() {
     setIsPdfLoading(true);
 
     try {
-      const res = await fetch("/api/refine", {
+     const res = await fetch(`${API_BASE}/api/refine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, preview: false }),
