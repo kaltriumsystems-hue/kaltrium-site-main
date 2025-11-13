@@ -63,7 +63,7 @@ if (MAINTENANCE) {
         </h2>
 
         <p className="mt-4 max-w-2xl mx-auto text-lg text-[#444]">
-          Proofreader & Editor for business and marketing texts — crafted for clarity, confidence, and precision.
+          Proofreader & Editor for business and marketing texts — crafted for clarity, confidence, and precision. Supports En, De and Ru.
         </p>
 
 
@@ -104,11 +104,7 @@ if (MAINTENANCE) {
               Receive a clean, branded PDF with tracked suggestions in minutes.
             </p>
           </div>
-          <div className="text-sm text-gray-500">
-         EN · DE · RU supported
           </div>
-
-        </div>
       </section>
 
       {/* SECURE & PRIVATE (перед футером) */}
