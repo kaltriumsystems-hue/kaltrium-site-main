@@ -10,7 +10,10 @@ export async function POST(req: Request) {
     }
 
     // Отправляем запрос на Render backend
-    const backendURL = process.env.BACKEND_URL;
+   const backendURL =
+  process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
+  "https://kaltrium-editor-bot.onrender.com";
+
     if (!backendURL) {
       return NextResponse.json({ ok: false, error: "No BACKEND_URL env" }, { status: 500 });
     }
