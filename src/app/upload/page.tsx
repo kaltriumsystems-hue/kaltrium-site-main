@@ -15,15 +15,15 @@ const PLANS: Plan[] = [
   { name: "€8", price: 8, maxWords: 5000, border: "#d6c4a3", bg: "#fdfaf5" }, // песочная
 ];
 
-// Подсчёт слов
+// Подсчёт слов только для RU / DE / EN
 function countWords(text: string) {
   const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   if (!normalized) return 0;
-  const matches = normalized.match(
-    /[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g
-  );
+
+  const matches = normalized.match(/[A-Za-zÄÖÜäöüßЁА-Яёа-я0-9]+/gu);
   return matches ? matches.length : 0;
 }
+
 
 // Мягкое ограничение по количеству слов
 function clampToWordLimit(input: string, limit = 5000) {
