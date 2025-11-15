@@ -48,6 +48,7 @@ type PreviewResponse = {
   qa: { grammar: number; clarity: number; tone: number; consistency: number };
   avg: number;
   preview: string;
+  words: number; // <— важное поле для PDF
   error?: string;
 };
 
@@ -61,7 +62,14 @@ export default function UploadPage() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
 
-  const words = useMemo(() => countWords(text), [text]);
+  // ВАЖНО: если PDF → берём количество слов из previewData.words
+  const words = useMemo(() => {
+    if (pdfFile) {
+      return previewData?.words ?? 0;
+    }
+    return countWords(text);
+  }, [text, pdfFile, previewData]);
+
   const plan = useMemo(() => selectPlan(words), [words]);
   const overLimit = words > 5000;
 
@@ -406,6 +414,7 @@ export default function UploadPage() {
     </main>
   );
 }
+
 
 
 
