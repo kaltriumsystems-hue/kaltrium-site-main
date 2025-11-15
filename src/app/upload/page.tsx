@@ -4,26 +4,23 @@ const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
   "https://kaltrium-editor-bot.onrender.com";
 
-
 import { useMemo, useState } from "react";
 
 type Plan = { name: string; price: number; maxWords: number; border?: string; bg?: string };
 
 const PLANS: Plan[] = [
   { name: "€3", price: 3, maxWords: 1500 },
-  { name: "€5", price: 5, maxWords: 3000, border: "#cfcfcf", bg: "#fcfcfc" }, // серебристая
-  { name: "€8", price: 8, maxWords: 5000, border: "#d6c4a3", bg: "#fdfaf5" }, // песочная
+  { name: "€5", price: 5, maxWords: 3000, border: "#cfcfcf", bg: "#fcfcfc" },
+  { name: "€8", price: 8, maxWords: 5000, border: "#d6c4a3", bg: "#fdfaf5" },
 ];
 
 // Подсчёт слов только для RU / DE / EN
 function countWords(text: string) {
   const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   if (!normalized) return 0;
-
   const matches = normalized.match(/[A-Za-zÄÖÜäöüßЁА-Яёа-я0-9]+/gu);
   return matches ? matches.length : 0;
 }
-
 
 // Мягкое ограничение по количеству слов
 function clampToWordLimit(input: string, limit = 5000) {
@@ -44,11 +41,11 @@ function selectPlan(words: number): Plan | null {
   return null;
 }
 
-// Тип превью-ответа от API
+// Тип превью-ответа от API (под новый backend)
 type PreviewResponse = {
   ok: boolean;
   lang: string;
-  qa: { grammar: number; clarity: number; tone: number; brand_fit: number };
+  qa: { grammar: number; clarity: number; tone: number; consistency: number };
   avg: number;
   preview: string;
   error?: string;
@@ -56,9 +53,9 @@ type PreviewResponse = {
 
 export default function UploadPage() {
   const [text, setText] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  // NEW: стейт для API
   const [apiError, setApiError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -67,15 +64,17 @@ export default function UploadPage() {
   const words = useMemo(() => countWords(text), [text]);
   const plan = useMemo(() => selectPlan(words), [words]);
   const overLimit = words > 5000;
-  const canPreview = words > 0 && !overLimit;
+  const canPreview = (words > 0 || !!pdfFile) && !overLimit;
 
-  // Проверка PDF
+  // Загрузка PDF
   function handlePdfUpload(file: File | null) {
     setPdfError(null);
     setApiError(null);
     setPreviewData(null);
+    setPdfFile(null);
 
     if (!file) return;
+
     if (file.size > 2 * 1024 * 1024) {
       setPdfError("PDF is too large (max 2 MB).");
       return;
@@ -84,11 +83,13 @@ export default function UploadPage() {
       setPdfError("Only PDF files are allowed.");
       return;
     }
-    // здесь позже добавим реальную отправку PDF
-    alert(`PDF accepted: ${file.name}`);
+
+    // сохраняем файл, очищаем текст — теперь работаем в PDF-режиме
+    setPdfFile(file);
+    setText("");
   }
 
-  // NEW: запрос превью
+  // PREVIEW
   async function handleGetPreview() {
     if (!canPreview) return;
     setApiError(null);
@@ -96,12 +97,25 @@ export default function UploadPage() {
     setIsPreviewLoading(true);
 
     try {
-   const res = await fetch("/api/refine", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ text, preview: true }),
-});
+      let res: Response;
 
+      if (pdfFile && !text.trim()) {
+        // PREVIEW ДЛЯ PDF → multipart/form-data
+        const form = new FormData();
+        form.append("file", pdfFile);
+        form.append("preview", "true");
+        res = await fetch(`${API_BASE}/api/refine`, {
+          method: "POST",
+          body: form,
+        });
+      } else {
+        // PREVIEW ДЛЯ ТЕКСТА → JSON
+        res = await fetch(`${API_BASE}/api/refine`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, preview: true }),
+        });
+      }
 
       if (!res.ok) {
         let msg = "Preview failed.";
@@ -130,23 +144,36 @@ export default function UploadPage() {
     }
   }
 
-  // NEW: запрос полного PDF (пока вместо оплаты)
+  // ПОЛНЫЙ PDF (вместо оплаты)
   async function handleGetPdf() {
     if (!canPreview) return;
     setApiError(null);
     setIsPdfLoading(true);
 
     try {
-    const res = await fetch("/api/refine", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, preview: false }),
-      });
+      let res: Response;
+
+      if (pdfFile && !text.trim()) {
+        // PDF-режим: отправляем файл
+        const form = new FormData();
+        form.append("file", pdfFile);
+        form.append("preview", "false");
+        res = await fetch(`${API_BASE}/api/refine`, {
+          method: "POST",
+          body: form,
+        });
+      } else {
+        // Текстовый режим
+        res = await fetch(`${API_BASE}/api/refine`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, preview: false }),
+        });
+      }
 
       const contentType = res.headers.get("content-type") || "";
 
       if (!res.ok) {
-        // Если бэк вернул JSON-ошибку
         if (contentType.includes("application/json")) {
           const data = await res.json();
           setApiError(data?.error || "Request failed.");
@@ -209,7 +236,7 @@ export default function UploadPage() {
         </div>
       </header>
 
-      {/* TOP BANNER (только если превышен лимит) */}
+      {/* TOP BANNER */}
       {overLimit && (
         <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
           ⚠️ Your text exceeds the maximum limit (5,000 words). Please shorten it or split into multiple files.
@@ -244,10 +271,13 @@ export default function UploadPage() {
 
         {/* TEXTAREA */}
         <textarea
-          placeholder="Paste your text here..."
+          placeholder={pdfFile ? "PDF uploaded. You can still paste text here instead, if you want." : "Paste your text here..."}
           rows={12}
           value={text}
-          onChange={(e) => setText(clampToWordLimit(e.target.value, 5000))}
+          onChange={(e) => {
+            setPdfFile(null); // если пользователь начал печатать — выходим из PDF-режима
+            setText(clampToWordLimit(e.target.value, 5000));
+          }}
           className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
                      focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
         />
@@ -270,13 +300,15 @@ export default function UploadPage() {
           >
             <div className="text-xs uppercase tracking-wide text-[#666]">Detected plan</div>
             <div className="mt-1 text-xl font-semibold">
-              {overLimit ? "—" : plan ? plan.name : "—"}
+              {overLimit ? "—" : plan ? plan.name : pdfFile ? "Based on PDF" : "—"}
             </div>
             <div className="text-xs text-[#666] mt-1">
               {overLimit
                 ? "Limit is 5,000 words"
                 : plan
                 ? `up to ${plan.maxWords.toLocaleString()} words`
+                : pdfFile
+                ? "plan will be based on extracted words"
                 : "paste text to detect"}
             </div>
           </div>
@@ -285,7 +317,7 @@ export default function UploadPage() {
           <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
             <div className="text-xs uppercase tracking-wide text-[#666]">Price</div>
             <div className="mt-1 text-2xl font-semibold">
-              {overLimit ? "—" : plan ? plan.name : "—"}
+              {overLimit ? "—" : plan ? plan.name : pdfFile ? "€3–€8" : "—"}
             </div>
           </div>
         </div>
@@ -301,9 +333,14 @@ export default function UploadPage() {
             {apiError}
           </p>
         )}
-        {!overLimit && words === 0 && !pdfError && !apiError && (
+        {!overLimit && words === 0 && !pdfError && !apiError && !pdfFile && (
           <p className="mt-4 text-sm text-[#666]">
-            Start by pasting your text — we’ll show the plan and price automatically.
+            Start by pasting your text — or upload a PDF. We’ll show the plan and price automatically.
+          </p>
+        )}
+        {pdfFile && (
+          <p className="mt-4 text-sm text-[#444]">
+            PDF selected: <strong>{pdfFile.name}</strong>. You can request a preview or the full refined PDF.
           </p>
         )}
 
@@ -344,7 +381,7 @@ export default function UploadPage() {
           payment.
         </p>
 
-        {/* NEW: блок с превью / QA */}
+        {/* PREVIEW BLOCK */}
         {previewData && (
           <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#fafafa] p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -361,7 +398,7 @@ export default function UploadPage() {
                 <p className="text-xs text-[#666]">
                   Grammar {previewData.qa.grammar} · Clarity {previewData.qa.clarity}
                   <br />
-                  Tone {previewData.qa.tone} · Brand fit {previewData.qa.brand_fit}
+                  Tone {previewData.qa.tone} · Consistency {previewData.qa.consistency}
                 </p>
               </div>
             </div>
