@@ -14,7 +14,7 @@ const PLANS: Plan[] = [
   { name: "€8", price: 8, maxWords: 5000, border: "#d6c4a3", bg: "#fdfaf5" },
 ];
 
-// Подсчёт слов только для RU / DE / EN
+// Подсчёт слов
 function countWords(text: string) {
   const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   if (!normalized) return 0;
@@ -22,7 +22,7 @@ function countWords(text: string) {
   return matches ? matches.length : 0;
 }
 
-// Мягкое ограничение по количеству слов
+// Ограничение по словам
 function clampToWordLimit(input: string, limit = 5000) {
   const parts =
     input
@@ -41,7 +41,7 @@ function selectPlan(words: number): Plan | null {
   return null;
 }
 
-// Тип превью-ответа от API (под новый backend)
+// Тип ответа превью под новый backend
 type PreviewResponse = {
   ok: boolean;
   lang: string;
@@ -64,6 +64,8 @@ export default function UploadPage() {
   const words = useMemo(() => countWords(text), [text]);
   const plan = useMemo(() => selectPlan(words), [words]);
   const overLimit = words > 5000;
+
+  // можно превью, если есть либо текст, либо PDF
   const canPreview = (words > 0 || !!pdfFile) && !overLimit;
 
   // Загрузка PDF
@@ -84,7 +86,7 @@ export default function UploadPage() {
       return;
     }
 
-    // сохраняем файл, очищаем текст — теперь работаем в PDF-режиме
+    // Сохраняем файл и очищаем текст → включаем PDF-режим
     setPdfFile(file);
     setText("");
   }
@@ -144,7 +146,7 @@ export default function UploadPage() {
     }
   }
 
-  // ПОЛНЫЙ PDF (вместо оплаты)
+  // ПОЛНЫЙ PDF
   async function handleGetPdf() {
     if (!canPreview) return;
     setApiError(null);
@@ -154,7 +156,6 @@ export default function UploadPage() {
       let res: Response;
 
       if (pdfFile && !text.trim()) {
-        // PDF-режим: отправляем файл
         const form = new FormData();
         form.append("file", pdfFile);
         form.append("preview", "false");
@@ -163,7 +164,6 @@ export default function UploadPage() {
           body: form,
         });
       } else {
-        // Текстовый режим
         res = await fetch(`${API_BASE}/api/refine`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -229,28 +229,24 @@ export default function UploadPage() {
           Paste your business or marketing content to get an instant preview and price.
         </p>
 
-        {/* TRUST NOTE */}
         <div className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#d6c4a3] px-6 py-3 text-black font-medium shadow-[0_8px_24px_rgba(214,196,163,0.35)]">
           <span>Instant preview included</span>
           <span className="opacity-70">• we don’t store your texts</span>
         </div>
       </header>
 
-      {/* TOP BANNER */}
       {overLimit && (
         <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
           ⚠️ Your text exceeds the maximum limit (5,000 words). Please shorten it or split into multiple files.
         </div>
       )}
 
-      {/* INPUT CARD */}
       <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-8">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <p className="text-[#333] text-base">
             Paste up to <strong>5,000 words</strong>. Price is detected automatically.
           </p>
 
-          {/* PDF Upload */}
           <label
             htmlFor="pdfUpload"
             className="rounded-xl border border-[#d6c4a3] bg-white text-black px-5 py-2 text-sm font-medium cursor-pointer
@@ -269,28 +265,28 @@ export default function UploadPage() {
           />
         </div>
 
-        {/* TEXTAREA */}
         <textarea
-          placeholder={pdfFile ? "PDF uploaded. You can still paste text here instead, if you want." : "Paste your text here..."}
+          placeholder={
+            pdfFile
+              ? "PDF uploaded. You can still paste text here instead, if you want."
+              : "Paste your text here..."
+          }
           rows={12}
           value={text}
           onChange={(e) => {
-            setPdfFile(null); // если пользователь начал печатать — выходим из PDF-режима
+            setPdfFile(null); // если пользователь начинает печатать — выходим из PDF-режима
             setText(clampToWordLimit(e.target.value, 5000));
           }}
           className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
                      focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
         />
 
-        {/* LIVE SUMMARY */}
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Words */}
           <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
             <div className="text-xs uppercase tracking-wide text-[#666]">Words</div>
             <div className="mt-1 text-2xl font-semibold">{words}</div>
           </div>
 
-          {/* Detected plan */}
           <div
             className="rounded-2xl border p-4 text-center transition-colors duration-300"
             style={{
@@ -313,7 +309,6 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* Price */}
           <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
             <div className="text-xs uppercase tracking-wide text-[#666]">Price</div>
             <div className="mt-1 text-2xl font-semibold">
@@ -322,7 +317,6 @@ export default function UploadPage() {
           </div>
         </div>
 
-        {/* WARNINGS / ERRORS */}
         {pdfError && (
           <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
             {pdfError}
@@ -344,9 +338,7 @@ export default function UploadPage() {
           </p>
         )}
 
-        {/* ACTIONS */}
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          {/* PREVIEW BUTTON */}
           <button
             disabled={!canPreview || isPreviewLoading}
             className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
@@ -360,7 +352,6 @@ export default function UploadPage() {
             {isPreviewLoading ? "Getting preview…" : "Get preview"}
           </button>
 
-          {/* PAYMENT / FULL PDF BUTTON */}
           <button
             disabled={!canPreview || isPdfLoading}
             className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
@@ -375,13 +366,11 @@ export default function UploadPage() {
           </button>
         </div>
 
-        {/* PREVIEW NOTE */}
         <p className="mt-3 text-center text-xs text-[#666]">
           Preview shows only the first part of your refined text. The full edited, branded PDF is delivered after
           payment.
         </p>
 
-        {/* PREVIEW BLOCK */}
         {previewData && (
           <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#fafafa] p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -405,7 +394,6 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* SECURITY LINE */}
         <div className="mt-8 flex flex-col items-center gap-1">
           <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
