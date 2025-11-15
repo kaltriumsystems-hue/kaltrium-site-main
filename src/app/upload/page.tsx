@@ -1,4 +1,4 @@
-"use client";
+
 
 const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
@@ -96,7 +96,7 @@ export default function UploadPage() {
     setIsPreviewLoading(true);
 
     try {
-     const res = await fetch(`${API_BASE}/api/refine`, {
+   const res = await fetch("/api/refine", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ text, preview: true }),
@@ -137,7 +137,7 @@ export default function UploadPage() {
     setIsPdfLoading(true);
 
     try {
-     const res = await fetch(`${API_BASE}/api/refine`, {
+    const res = await fetch("/api/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, preview: false }),
