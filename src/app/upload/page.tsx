@@ -1,4 +1,4 @@
-
+"use client";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
