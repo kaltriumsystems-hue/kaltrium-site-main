@@ -1,15 +1,16 @@
-export const metadata = {
-  title: "Pricing – Kaltrium",
+export const metadata = {  
+  title: "Pricing – Kaltrium",  
   description:
-    "Simple, transparent pricing for AI proofreading and editing. One price per file — crafted for clarity and precision.",
+    "Simple, transparent pricing for AI proofreading and editing. One price per file — crafted for clarity and precision.",  
   keywords:
-    "Kaltrium pricing, AI proofreading, editing service, business text correction, marketing writing, PDF proofreading",
-};
+    "Kaltrium pricing, AI proofreading, editing service, business text correction, marketing writing, PDF proofreading",  
+};  
 
 export default function PricingPage() {
   return (
     <main className="relative mx-auto max-w-6xl px-6 pt-8 pb-16 text-[#111]">
-      {/* BACK BUTTON — в верхнем левом углу */}
+
+      {/* BACK BUTTON */}
       <a
         href="/"
         className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-xl border border-[#d6c4a3] px-4 py-1.5 text-sm font-medium text-[#111] hover:bg-[#faf8f4] transition"
@@ -35,10 +36,11 @@ export default function PricingPage() {
 
       {/* PRICING CARDS */}
       <section className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+
         {/* €3 */}
         <div
-          className="h-full rounded-2xl bg-white border border-zinc-200 md:border-2 md:border-zinc-200 
-          shadow-[0_8px_22px_rgba(0,0,0,0.05)] 
+          className="h-full rounded-2xl bg-white border border-zinc-200 md:border-2 md:border-zinc-200
+          shadow-[0_8px_22px_rgba(0,0,0,0.05)]
           transition duration-300 ease-out
           motion-safe:hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]
           focus-within:ring-2 focus-within:ring-[#d6c4a3] flex flex-col"
@@ -48,9 +50,16 @@ export default function PricingPage() {
               <div className="text-5xl font-semibold leading-none">€3</div>
               <div className="text-sm text-[#666] leading-none">up to 1,000 words</div>
             </div>
-            <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
+
+            <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for short texts.
             </p>
+
+            {/* ★ NEW: One-time payment */}
+            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
+              One-time payment — no subscription.
+            </p>
+
             <a
               href="/upload"
               className="mt-auto inline-flex justify-center w-full rounded-xl bg-[#d6c4a3] text-black px-5 py-3 font-semibold
@@ -77,9 +86,16 @@ export default function PricingPage() {
               <div className="text-5xl font-semibold leading-none">€5</div>
               <div className="text-sm text-[#666] leading-none">up to 2,000 words</div>
             </div>
-            <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
+
+            <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for medium texts.
             </p>
+
+            {/* ★ NEW */}
+            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
+              One-time payment — no subscription.
+            </p>
+
             <a
               href="/upload"
               className="mt-auto inline-flex justify-center w-full rounded-xl bg-[#d6c4a3] text-black px-5 py-3 font-semibold
@@ -106,9 +122,16 @@ export default function PricingPage() {
               <div className="text-5xl font-semibold leading-none">€8</div>
               <div className="text-sm text-[#666] leading-none">up to 3,000 words</div>
             </div>
-            <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
+
+            <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for longer texts.
             </p>
+
+            {/* ★ NEW */}
+            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
+              One-time payment — no subscription.
+            </p>
+
             <a
               href="/upload"
               className="mt-auto inline-flex justify-center w-full rounded-xl bg-[#d6c4a3] text-black px-5 py-3 font-semibold
@@ -121,12 +144,13 @@ export default function PricingPage() {
             </a>
           </div>
         </div>
-      </section>
-      
-      <p className="mt-4 text-xs text-neutral-500 text-center">
-  One-time payment per document – no subscription, no recurring charges.
-</p>
 
+      </section>
+
+      {/* 🔥 New clarifying text under all plans */}
+      <p className="mt-4 text-xs text-neutral-500 text-center">
+        One-time payment per document – no subscription, no recurring charges.
+      </p>
 
       {/* FOOTNOTE */}
       <p className="mt-12 text-center text-sm text-[#666] font-medium">
@@ -135,4 +159,5 @@ export default function PricingPage() {
     </main>
   );
 }
+
 
