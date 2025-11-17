@@ -46,7 +46,7 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€3</div>
-              <div className="text-sm text-[#666] leading-none">up to 1,500 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 1,000 words</div>
             </div>
             <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for short texts.
@@ -75,7 +75,7 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€5</div>
-              <div className="text-sm text-[#666] leading-none">up to 3,000 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 2,000 words</div>
             </div>
             <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for medium texts.
@@ -104,7 +104,7 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€8</div>
-              <div className="text-sm text-[#666] leading-none">up to 5,000 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 3,000 words</div>
             </div>
             <p className="mt-6 mb-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
               Editing & proofreading for longer texts.
