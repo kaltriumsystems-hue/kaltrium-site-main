@@ -1,13 +1,13 @@
 export const metadata = {
   title: "Kaltrium — AI Proofreader & Editor for Business & Marketing Texts",
   description:
-    "Kaltrium instantly edits and proofreads business and marketing texts – available in English, German and Russian. Get a polished, marketing-ready PDF with refined tone, clarity and style in minutes.",
+    "Kaltrium instantly edits and proofreads business and marketing texts – available in English and German. Get a polished, marketing-ready PDF with refined tone, clarity and style in minutes.",
   keywords:
     "AI proofreader, business editing, marketing text correction, PDF proofreading, AI editor, professional writing, style improvement",
   openGraph: {
     title: "Kaltrium — Smart AI Proofreader & Editor",
     description:
-      "AI-powered Proofreader & Editor for business and marketing text – supports English, German and Russian. Upload your text and receive a polished, branded PDF – instantly.",
+      "AI-powered Proofreader & Editor for business and marketing text – supports English and German. Upload your text and receive a polished, branded PDF – instantly.",
     url: "https://kaltrium.com",
     siteName: "Kaltrium",
     images: [
@@ -177,7 +177,7 @@ export default function Page() {
 
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#b8b8b8]">
             <div className="text-xl font-semibold text-black mb-2">
-              Instant PDF
+              Instant PDF / No Subscription needed
             </div>
             <p className="text-[#444] text-sm leading-relaxed">
               Receive a clean, branded PDF in minutes — no registration needed.
