@@ -1,27 +1,48 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 export default function SuccessPage() {
+  const [status, setStatus] = useState("Preparing your PDF...");
+
+  useEffect(() => {
+    async function fetchPDF() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const session_id = urlParams.get("session_id");
+
+      if (!session_id) {
+        setStatus("Missing session_id.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/finish-pdf?session_id=${session_id}`);
+
+        if (!res.ok) {
+          setStatus("Error generating PDF. Please contact support.");
+          return;
+        }
+
+        const blob = await res.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Kaltrium-Edited-Report.pdf";
+        link.click();
+
+        setStatus("PDF downloaded successfully.");
+      } catch (e) {
+        console.error(e);
+        setStatus("Unexpected error. Please try again.");
+      }
+    }
+
+    fetchPDF();
+  }, []);
+
   return (
-    <main className="max-w-xl mx-auto text-center px-6 pt-20 pb-24">
-      <h1 className="text-4xl font-semibold mb-4">Thank you!</h1>
-      <p className="text-lg text-[#444] mb-6">
-        Your payment was successful.  
-        You can now upload your document for editing.
-      </p>
-
-      <div className="flex justify-center gap-4 mt-8">
-        <a
-          href="/"
-          className="inline-block rounded-xl bg-white border border-[#d6c4a3] text-black px-6 py-3 font-semibold shadow-sm hover:bg-[#faf8f4]"
-        >
-          ← Back to Home
-        </a>
-
-        <a
-          href="/upload"
-          className="inline-block rounded-xl bg-[#d6c4a3] text-black px-6 py-3 font-semibold shadow hover:bg-[#e7d9bf]"
-        >
-          Upload your file →
-        </a>
-      </div>
+    <main className="text-center p-10">
+      <h1 className="text-3xl font-bold">Thank you!</h1>
+      <p className="mt-4 text-lg">{status}</p>
     </main>
   );
 }
