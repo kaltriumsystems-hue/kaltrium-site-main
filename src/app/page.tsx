@@ -81,7 +81,6 @@ export default function Page() {
           </a>
         </nav>
       </header>
-
       {/* HERO */}
       <section className="mx-auto max-w-6xl px-6 pt-12 pb-16 text-center">
         <h2 className="text-5xl md:text-6xl font-semibold leading-tight">
@@ -94,29 +93,30 @@ export default function Page() {
           clarity, confidence, and precision. Supports EN & DE.
         </p>
 
-        {/* CTA buttons */}
+        {/* CTA buttons — все на одной базе */}
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          {/* Try now — gold */}
+          {/* общая база: inline-flex, одинаковые padding, шрифт, radius, shadow */}
+          {/* Try now — золото */}
           <a
             href="/upload"
-            className="inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm md:text-base font-semibold text-black bg-[#d6c4a3] shadow-[0_8px_24px_rgba(214,196,163,0.55)] hover:shadow-[0_12px_32px_rgba(214,196,163,0.7)] active:scale-[0.98] transition"
+            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#d6c4a3] bg-[#d6c4a3] text-black shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] active:scale-[0.98] transition"
           >
             Try now
           </a>
 
-          {/* View pricing — white */}
+          {/* View pricing — белая */}
           <a
             href="/pricing"
-            className="inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm md:text-base font-semibold bg-white border border-[#d4d4d4] text-[#222] shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:border-[#bfbfbf] active:scale-[0.98] transition"
+            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#d4d4d4] bg-white text-[#222] shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] active:scale-[0.98] transition"
           >
             View pricing
           </a>
 
-          {/* Example PDF — silver, ярче и темнее */}
+          {/* Example PDF — более тёмное “металлическое” серебро */}
           <a
             href="/example.pdf"
             target="_blank"
-            className="inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm md:text-base font-semibold text-[#222] bg-[#e0e0e0] border border-[#b8b8b8] shadow-[0_6px_20px_rgba(0,0,0,0.12)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.18)] hover:border-[#a3a3a3] active:scale-[0.98] transition"
+            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#b8b8b8] bg-[#dcdcdc] text-[#222] shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.16)] active:scale-[0.98] transition"
           >
             Example PDF
           </a>
@@ -153,6 +153,7 @@ export default function Page() {
           </div>
         </div>
       </section>
+
 
       {/* SECURE & PRIVATE (перед футером) */}
       <div className="mt-16 flex flex-col items-center gap-1 pb-10">
