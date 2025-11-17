@@ -4,6 +4,16 @@ const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
   "https://kaltrium-editor-bot.onrender.com";
 
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+
 import { useMemo, useState } from "react";
 
 type Plan = { name: string; price: number; maxWords: number; border?: string; bg?: string };
