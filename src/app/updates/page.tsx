@@ -30,7 +30,7 @@ export default function UpdatesPage() {
             Upload a simple photo and get a clean, professional-looking portrait in your chosen style:
             formal, semi-formal, or casual — perfect for LinkedIn, CVs, company profiles, or business websites.
           </p>
-          <p className="text-xs text-[#777] mt-1">November 2025</p>
+          <p className="text-xs text-[#777] mt-1">December 2025</p>
         </div>
       </section>
 
