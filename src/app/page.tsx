@@ -94,33 +94,65 @@ export default function Page() {
         </p>
 
         {/* CTA buttons — все на одной базе */}
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          {/* общая база: inline-flex, одинаковые padding, шрифт, radius, shadow */}
-          {/* Try now — золото */}
-          <a
-            href="/upload"
-            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#d6c4a3] bg-[#d6c4a3] text-black shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] active:scale-[0.98] transition"
-          >
-            Try now
-          </a>
+      <div className="mt-8 flex flex-wrap justify-center gap-4">
 
-          {/* View pricing — белая */}
-          <a
-            href="/pricing"
-            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#d4d4d4] bg-white text-[#222] shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] active:scale-[0.98] transition"
-          >
-            View pricing
-          </a>
+  {/* Try now — gold */}
+  <a
+    href="/upload"
+    className="
+      inline-flex items-center justify-center
+      min-w-[170px] px-8 py-3
+      rounded-2xl font-semibold
+      bg-[#d6c4a3] text-black
+      border border-[#d6c4a3]
+      shadow-[0_6px_18px_rgba(214,196,163,0.40)]
+      hover:shadow-[0_8px_24px_rgba(214,196,163,0.55)]
+      active:scale-[0.98]
+      transition
+    "
+  >
+    Try now
+  </a>
 
-          {/* Example PDF — более тёмное “металлическое” серебро */}
-          <a
-            href="/example.pdf"
-            target="_blank"
-            className="inline-flex items-center justify-center px-8 py-3 text-sm md:text-base font-semibold rounded-2xl border border-[#b8b8b8] bg-[#dcdcdc] text-[#222] shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.16)] active:scale-[0.98] transition"
-          >
-            Example PDF
-          </a>
-        </div>
+  {/* View pricing — clean white */}
+  <a
+    href="/pricing"
+    className="
+      inline-flex items-center justify-center
+      min-w-[170px] px-8 py-3
+      rounded-2xl font-semibold
+      bg-white text-[#222]
+      border border-[#d4d4d4]
+      shadow-[0_6px_18px_rgba(0,0,0,0.06)]
+      hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)]
+      active:scale-[0.98]
+      transition
+    "
+  >
+    View pricing
+  </a>
+
+  {/* Example PDF — real silver */}
+  <a
+    href="/example.pdf"
+    target="_blank"
+    className="
+      inline-flex items-center justify-center
+      min-w-[170px] px-8 py-3
+      rounded-2xl font-semibold
+      bg-[#cfcfcf] text-[#111]
+      border border-[#b8b8b8]
+      shadow-[0_6px_18px_rgba(0,0,0,0.10)]
+      hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)]
+      active:scale-[0.98]
+      transition
+    "
+  >
+    Example PDF
+  </a>
+
+</div>
+
 
         {/* 3 преимущества */}
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
