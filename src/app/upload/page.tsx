@@ -9,9 +9,9 @@ import { useMemo, useState } from "react";
 type Plan = { name: string; price: number; maxWords: number; border?: string; bg?: string };
 
 const PLANS: Plan[] = [
-  { name: "€3", price: 3, maxWords: 1500 },
-  { name: "€5", price: 5, maxWords: 3000, border: "#cfcfcf", bg: "#fcfcfc" },
-  { name: "€8", price: 8, maxWords: 5000, border: "#d6c4a3", bg: "#fdfaf5" },
+  { name: "€3", price: 3, maxWords: 1000 },
+  { name: "€5", price: 5, maxWords: 2000, border: "#cfcfcf", bg: "#fcfcfc" },
+  { name: "€8", price: 8, maxWords: 3000, border: "#d6c4a3", bg: "#fdfaf5" },
 ];
 
 // Подсчёт слов
@@ -23,7 +23,7 @@ function countWords(text: string) {
 }
 
 // Ограничение по словам
-function clampToWordLimit(input: string, limit = 5000) {
+function clampToWordLimit(input: string, limit = 3000) {
   const parts =
     input
       .replace(/[\u200B-\u200D\uFEFF]/g, "")
@@ -35,9 +35,9 @@ function clampToWordLimit(input: string, limit = 5000) {
 
 function selectPlan(words: number): Plan | null {
   if (words === 0) return null;
-  if (words <= 1500) return PLANS[0];
-  if (words <= 3000) return PLANS[1];
-  if (words <= 5000) return PLANS[2];
+  if (words <= 1000) return PLANS[0];
+  if (words <= 2000) return PLANS[1];
+  if (words <= 3000) return PLANS[2];
   return null;
 }
 
@@ -71,7 +71,7 @@ export default function UploadPage() {
   }, [text, pdfFile, previewData]);
 
   const plan = useMemo(() => selectPlan(words), [words]);
-  const overLimit = words > 5000;
+  const overLimit = words > 3000;
 
   // можно превью, если есть либо текст, либо PDF
   const canPreview = (words > 0 || !!pdfFile) && !overLimit;
@@ -252,7 +252,7 @@ export default function UploadPage() {
       <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-8">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <p className="text-[#333] text-base">
-            Paste up to <strong>5,000 words</strong>. Price is detected automatically.
+            Paste up to <strong>3,000 words</strong>. Price is detected automatically.
           </p>
 
           <label
@@ -283,7 +283,7 @@ export default function UploadPage() {
           value={text}
           onChange={(e) => {
             setPdfFile(null); // если пользователь начинает печатать — выходим из PDF-режима
-            setText(clampToWordLimit(e.target.value, 5000));
+            setText(clampToWordLimit(e.target.value, 3000));
           }}
           className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
                      focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
