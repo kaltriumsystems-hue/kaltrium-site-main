@@ -122,6 +122,11 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      
+      <p className="mt-4 text-xs text-neutral-500 text-center">
+  One-time payment per document – no subscription, no recurring charges.
+</p>
+
 
       {/* FOOTNOTE */}
       <p className="mt-12 text-center text-sm text-[#666] font-medium">
