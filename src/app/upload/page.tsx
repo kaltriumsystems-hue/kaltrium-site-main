@@ -86,7 +86,7 @@ export default function UploadPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isPdfLoading] = useState(false); // пока не используем загрузку PDF, но оставляем стейт
 
   // ВАЖНО: если PDF → берём количество слов из previewData.words
   const words = useMemo(() => {
@@ -180,69 +180,12 @@ export default function UploadPage() {
     }
   }
 
-  // ПОЛНЫЙ PDF
+  // ПОЛНЫЙ PDF — сейчас больше не используем на этой странице (чтобы не раздавать бесплатно),
+  // оставляем функцию на будущее, если перенесём её на /success после оплаты.
   async function handleGetPdf() {
-    if (!canPreview) return;
-    setApiError(null);
-    setIsPdfLoading(true);
-
-    try {
-      let res: Response;
-
-      if (pdfFile && !text.trim()) {
-        const form = new FormData();
-        form.append("file", pdfFile);
-        form.append("preview", "false");
-        res = await fetch(`${API_BASE}/api/refine`, {
-          method: "POST",
-          body: form,
-        });
-      } else {
-        res = await fetch(`${API_BASE}/api/refine`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, preview: false }),
-        });
-      }
-
-      const contentType = res.headers.get("content-type") || "";
-
-      if (!res.ok) {
-        if (contentType.includes("application/json")) {
-          const data = await res.json();
-          setApiError(data?.error || "Request failed.");
-        } else {
-          setApiError("Request failed.");
-        }
-        return;
-      }
-
-      if (contentType.includes("application/pdf")) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "kaltrium-refined.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      } else if (contentType.includes("application/json")) {
-        const data = await res.json();
-        if (data?.error) {
-          setApiError(data.error);
-        } else {
-          setApiError("Unexpected response from server.");
-        }
-      } else {
-        setApiError("Unexpected response type from server.");
-      }
-    } catch (err) {
-      console.error(err);
-      setApiError("Network error. Please try again.");
-    } finally {
-      setIsPdfLoading(false);
-    }
+    // заглушка: не вызываем тут полный PDF
+    alert("Full PDF is delivered after payment. Please complete the payment first.");
+    return;
   }
 
   return (
@@ -271,7 +214,7 @@ export default function UploadPage() {
 
       {overLimit && (
         <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
-          ⚠️ Your text exceeds the maximum limit (5,000 words). Please shorten it or split into multiple files.
+          ⚠️ Your text exceeds the maximum limit (3,000 words). Please shorten it or split into multiple files.
         </div>
       )}
 
@@ -283,7 +226,7 @@ export default function UploadPage() {
 
           <label
             htmlFor="pdfUpload"
-            className="rounded-xl border border-[#d6c4a3] bg-white text-black px-5 py-2 text-sm font-medium cursor-pointer
+            className="rounded-xl border border-[#d6c4a3] bg:white text-black px-5 py-2 text-sm font-medium cursor-pointer
                        transition duration-200 ease-out
                        hover:bg-[#fdfaf5] hover:shadow-[0_6px_16px_rgba(214,196,163,0.35)]
                        active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]"
@@ -334,7 +277,7 @@ export default function UploadPage() {
             </div>
             <div className="text-xs text-[#666] mt-1">
               {overLimit
-                ? "Limit is 5,000 words"
+                ? "Limit is 3,000 words"
                 : plan
                 ? `up to ${plan.maxWords.toLocaleString()} words`
                 : pdfFile
@@ -387,14 +330,14 @@ export default function UploadPage() {
           </button>
 
           <button
-            disabled={!canPreview || isPdfLoading}
+            disabled={!canPreview || !plan}
             className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
               ${
-                canPreview && !isPdfLoading
-                  ? "bg-white border border-[#d6c4a3] text-black hover:bg-[#fdfaf5] hover:shadow-[0_8px_20px_rgba(214,196,163,0.35)] active:scale-[0.98]"
+                canPreview && plan
+                  ? "bg-white border border-[#d6c4a3] text:black hover:bg-[#fdfaf5] hover:shadow-[0_8px_20px_rgba(214,196,163,0.35)] active:scale-[0.98]"
                   : "bg-white border border-[#e5e5e5] text-[#999] cursor-not-allowed shadow-none"
               }`}
-            onClick={handleGetPdf}
+            onClick={() => plan && handlePay(plan.price)}
           >
             {isPdfLoading ? "Preparing PDF…" : "Continue to payment"}
           </button>
@@ -428,7 +371,7 @@ export default function UploadPage() {
           </div>
         )}
 
-        <div className="mt-8 flex flex-col items-center gap-1">
+        <div className="mt-8 flex flex-col items:center gap-1">
           <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
           </span>
@@ -440,7 +383,6 @@ export default function UploadPage() {
     </main>
   );
 }
-
 
 
 
