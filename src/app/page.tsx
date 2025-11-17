@@ -177,7 +177,7 @@ export default function Page() {
 
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#b8b8b8]">
             <div className="text-xl font-semibold text-black mb-2">
-              Instant PDF / No Subscription needed
+              Instant PDF / No Subscription Required
             </div>
             <p className="text-[#444] text-sm leading-relaxed">
               Receive a clean, branded PDF in minutes — no registration needed.
