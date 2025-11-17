@@ -57,76 +57,110 @@ if (MAINTENANCE) {
       </header>
 
       {/* HERO */}
-      <section className="mx-auto max-w-6xl px-6 pt-12 pb-16 text-center">
-        <h2 className="text-5xl md:text-6xl font-semibold leading-tight">
-          AI that edits.<br className="hidden md:block" /> People who care.
-        </h2>
+    <section className="mx-auto max-w-6xl px-6 pt-12 pb-16 text-center">
+  <h2 className="text-5xl md:text-6xl font-semibold leading-tight">
+    AI that edits.
+    <br className="hidden md:block" /> People who care.
+  </h2>
 
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-[#444]">
-          Proofreader & Editor for business and marketing texts — crafted for clarity, confidence, and precision. Supports EN & DE.
-        </p>
+  <p className="mt-4 max-w-2xl mx-auto text-lg text-[#444]">
+    Proofreader & Editor for business and marketing texts — crafted for clarity,
+    confidence, and precision. Supports EN & DE.
+  </p>
 
+  {/* CTA buttons (three equal buttons) */}
+  <div className="mt-8 flex flex-wrap justify-center gap-4">
 
-        {/* CTA buttons (живые) */}
-       <div className="mt-8 flex flex-wrap justify-center gap-4">
-  <a
-    href="/upload"
-    className="rounded-2xl bg-[#d6c4a3] text-black px-8 py-3 font-semibold shadow-[0_8px_24px_rgba(214,196,163,0.5)] hover:shadow-[0_12px_32px_rgba(214,196,163,0.6)] active:scale-[0.98] transition"
-  >
-    Try now
-  </a>
+    {/* Try now — gold */}
+    <a
+      href="/upload"
+      className="
+        rounded-2xl
+        px-8 py-3
+        font-semibold
+        text-black
+        bg-[#d6c4a3]
+        shadow-[0_8px_24px_rgba(214,196,163,0.45)]
+        hover:shadow-[0_12px_32px_rgba(214,196,163,0.6)]
+        active:scale-[0.98]
+        transition
+      "
+    >
+      Try now
+    </a>
 
-  <a
-    href="/pricing"
-    className="rounded-2xl border border-[#c8c8c8] bg-white/80 px-8 py-3 font-medium hover:border-[#a0a0a0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)] active:scale-[0.98] transition"
-  >
-    View pricing
-  </a>
-<a
-  href="/example.pdf"
-  target="_blank"
-  className="
-    rounded-2xl
-    border border-[#cfcfcf]
-    bg-[#f5f5f5]
-    px-8 py-3
-    font-medium
-    text-[#333]
-    shadow-[0_4px_14px_rgba(0,0,0,0.06)]
-    hover:shadow-[0_6px_18px_rgba(0,0,0,0.10)]
-    hover:border-[#b8b8b8]
-    active:scale-[0.98]
-    transition
-  "
->
-  Example PDF
-</a>
+    {/* View pricing — white */}
+    <a
+      href="/pricing"
+      className="
+        rounded-2xl
+        px-8 py-3
+        font-medium
+        bg-white
+        border border-[#cccccc]
+        text-[#222]
+        shadow-[0_4px_14px_rgba(0,0,0,0.05)]
+        hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
+        hover:border-[#b6b6b6]
+        active:scale-[0.98]
+        transition
+      "
+    >
+      View pricing
+    </a>
 
+    {/* Example PDF — perfect SILVER */}
+    <a
+      href="/example.pdf"
+      target="_blank"
+      className="
+        rounded-2xl
+        px-8 py-3
+        font-medium
+        text-[#222]
+        bg-[#eeeeee]
+        border border-[#cfcfcf]
+        shadow-[0_4px_14px_rgba(0,0,0,0.06)]
+        hover:shadow-[0_6px_18px_rgba(0,0,0,0.10)]
+        hover:border-[#b8b8b8]
+        active:scale-[0.98]
+        transition
+      "
+    >
+      Example PDF
+    </a>
   </div>
 
-        {/* 3 преимущества */}
-        <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-          <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#d6c4a3]">
-            <div className="text-xl font-semibold text-black mb-2">Editing & Proofreading</div>
-            <p className="text-[#444] text-sm leading-relaxed">
-              Grammar, tone, and clarity — refined for business impact.
-            </p>
-          </div>
+  {/* No registration */}
+  <p className="mt-3 text-sm text-[#666]">
+    No registration required — instant results.
+  </p>
 
-          <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#cfcfcf]">
-            <div className="text-xl font-semibold text-black mb-2">Marketing-Ready</div>
-            <p className="text-[#444] text-sm leading-relaxed">
-              Concise, persuasive language that sells your message.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#b8b8b8]">
-            <div className="text-xl font-semibold text-black mb-2">Instant PDF</div>
-            <p className="text-[#444] text-sm leading-relaxed">
-              Receive a clean, branded PDF with tracked suggestions in minutes.
-            </p>
-          </div>
-          </div>
-      </section>
+  {/* 3 преимущества */}
+  <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+    <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#d6c4a3]">
+      <div className="text-xl font-semibold text-black mb-2">Editing & Proofreading</div>
+      <p className="text-[#444] text-sm leading-relaxed">
+        Grammar, tone, and clarity — refined for business impact.
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#cfcfcf]">
+      <div className="text-xl font-semibold text-black mb-2">Marketing-Ready</div>
+      <p className="text-[#444] text-sm leading-relaxed">
+        Concise, persuasive language that sells your message.
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#b8b8b8]">
+      <div className="text-xl font-semibold text-black mb-2">Instant PDF</div>
+      <p className="text-[#444] text-sm leading-relaxed">
+        Receive a clean, branded PDF with tracked suggestions in minutes.
+      </p>
+    </div>
+  </div>
+</section>
+
 
       {/* SECURE & PRIVATE (перед футером) */}
       <div className="mt-16 flex flex-col items-center gap-1 pb-10">
