@@ -4,6 +4,7 @@ const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
   "https://kaltrium-editor-bot.onrender.com";
 
+// читаем PDF в base64, чтобы отправить в Stripe-бекенд вместе с текстом
 function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -13,10 +14,15 @@ function readFileAsDataURL(file: File): Promise<string> {
   });
 }
 
-
 import { useMemo, useState } from "react";
 
-type Plan = { name: string; price: number; maxWords: number; border?: string; bg?: string };
+type Plan = {
+  name: string;
+  price: number;
+  maxWords: number;
+  border?: string;
+  bg?: string;
+};
 
 const PLANS: Plan[] = [
   { name: "€3", price: 3, maxWords: 1000 },
@@ -24,12 +30,36 @@ const PLANS: Plan[] = [
   { name: "€8", price: 8, maxWords: 3000, border: "#d6c4a3", bg: "#fdfaf5" },
 ];
 
-async function handlePay(price: number) {
+type CheckoutOptions = {
+  text: string;
+  lang: string;
+  words: number;
+  pdfFile: File | null;
+};
+
+// один обработчик оплаты — БЕЗ дублей
+async function handlePay(price: number, opts: CheckoutOptions) {
+  const { text, lang, words, pdfFile } = opts;
+
   try {
+    let fileBase64: string | null = null;
+
+    // если загружен PDF – кодируем его, иначе отправляем только текст
+    if (pdfFile) {
+      const dataUrl = await readFileAsDataURL(pdfFile);
+      fileBase64 = dataUrl.split(",")[1] || dataUrl;
+    }
+
     const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ price }),
+      body: JSON.stringify({
+        price,
+        text,
+        lang,
+        words,
+        file: fileBase64,
+      }),
     });
 
     if (!res.ok) {
@@ -49,6 +79,8 @@ async function handlePay(price: number) {
     alert("Payment error. Please try again.");
   }
 }
+
+
 
 // Подсчёт слов
 function countWords(text: string) {
