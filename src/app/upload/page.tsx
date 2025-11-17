@@ -329,18 +329,14 @@ export default function UploadPage() {
             {isPreviewLoading ? "Getting preview…" : "Get preview"}
           </button>
 
-          <button
-            disabled={!canPreview || !plan}
-            className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
-              ${
-                canPreview && plan
-                  ? "bg-white border border-[#d6c4a3] text:black hover:bg-[#fdfaf5] hover:shadow-[0_8px_20px_rgba(214,196,163,0.35)] active:scale-[0.98]"
-                  : "bg-white border border-[#e5e5e5] text-[#999] cursor-not-allowed shadow-none"
-              }`}
-            onClick={() => plan && handlePay(plan.price)}
-          >
-            {isPdfLoading ? "Preparing PDF…" : "Continue to payment"}
-          </button>
+         <button
+  disabled={true}
+  className="rounded-xl px-8 py-3 font-medium opacity-60 cursor-not-allowed"
+  onClick={() => alert("Payments are temporarily disabled.")}
+>
+  Payments are temporarily disabled
+</button>
+
         </div>
 
         <p className="mt-3 text-center text-xs text-[#666]">
