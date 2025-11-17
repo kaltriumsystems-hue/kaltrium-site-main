@@ -370,15 +370,15 @@ export default function UploadPage() {
             </div>
           </div>
         )}
-
-        <div className="mt-8 flex flex-col items:center gap-1">
-          <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
+        <div className="mt-8 text-center">
+          <span className="inline-flex items-center justify-center rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
           </span>
-          <p className="text-sm text-[#444] mt-2 text-center">
+          <p className="mt-2 text-sm text-[#444]">
             Processing is secure and immediately deleted. PDF (optional): max 2 MB, text-based only (no scans).
           </p>
         </div>
+
       </section>
     </main>
   );
