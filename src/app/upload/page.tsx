@@ -14,6 +14,32 @@ const PLANS: Plan[] = [
   { name: "€8", price: 8, maxWords: 3000, border: "#d6c4a3", bg: "#fdfaf5" },
 ];
 
+async function handlePay(price: number) {
+  try {
+    const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price }),
+    });
+
+    if (!res.ok) {
+      console.error("Stripe error", await res.text());
+      alert("Payment failed. Please try again.");
+      return;
+    }
+
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url; // редирект на Stripe Checkout
+    } else {
+      alert("No checkout URL returned.");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Payment error. Please try again.");
+  }
+}
+
 // Подсчёт слов
 function countWords(text: string) {
   const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
