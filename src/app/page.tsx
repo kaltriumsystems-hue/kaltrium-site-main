@@ -82,15 +82,26 @@ if (MAINTENANCE) {
   >
     View pricing
   </a>
+<a
+  href="/example.pdf"
+  target="_blank"
+  className="
+    rounded-2xl
+    border border-[#d6c4a3]
+    bg-[#fdfaf5]
+    px-8 py-3
+    font-medium
+    text-[#444]
+    shadow-[0_4px_14px_rgba(214,196,163,0.25)]
+    hover:shadow-[0_6px_18px_rgba(214,196,163,0.35)]
+    hover:border-[#cbb390]
+    active:scale-[0.98]
+    transition
+  "
+>
+  Example PDF
+</a>
 
-  <a
-    href="/example.pdf"
-    target="_blank"
-    className="rounded-2xl border border-[#cfcfcf] bg-white/80 px-8 py-3 font-medium text-[#333] hover:border-[#a0a0a0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)] active:scale-[0.98] transition"
-  >
-    Example PDF
-  </a>
-</div>
 
         {/* 3 преимущества */}
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
