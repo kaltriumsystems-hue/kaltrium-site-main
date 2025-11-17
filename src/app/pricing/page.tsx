@@ -1,15 +1,14 @@
-export const metadata = {  
-  title: "Pricing – Kaltrium",  
+export const metadata = {
+  title: "Pricing – Kaltrium",
   description:
-    "Simple, transparent pricing for AI proofreading and editing. One price per file — crafted for clarity and precision.",  
+    "Simple, transparent pricing for AI proofreading and editing. One price per file — crafted for clarity and precision.",
   keywords:
-    "Kaltrium pricing, AI proofreading, editing service, business text correction, marketing writing, PDF proofreading",  
-};  
+    "Kaltrium pricing, AI proofreading, editing service, business text correction, marketing writing, PDF proofreading",
+};
 
 export default function PricingPage() {
   return (
     <main className="relative mx-auto max-w-6xl px-6 pt-8 pb-16 text-[#111]">
-
       {/* BACK BUTTON */}
       <a
         href="/"
@@ -36,7 +35,6 @@ export default function PricingPage() {
 
       {/* PRICING CARDS */}
       <section className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-
         {/* €3 */}
         <div
           className="h-full rounded-2xl bg-white border border-zinc-200 md:border-2 md:border-zinc-200
@@ -48,16 +46,11 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€3</div>
-              <div className="text-sm text-[#666] leading-none">up to 1,000 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 1,500 words</div>
             </div>
 
             <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
-              Editing & proofreading for short texts.
-            </p>
-
-            {/* ★ NEW: One-time payment */}
-            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
-              One-time payment — no subscription.
+              For short business texts: emails, LinkedIn posts, short landing sections.
             </p>
 
             <a
@@ -68,7 +61,7 @@ export default function PricingPage() {
               motion-safe:hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(0,0,0,0.10)]
               active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]"
             >
-              Choose €3 plan
+              Choose €3 · pay once
             </a>
           </div>
         </div>
@@ -84,16 +77,11 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€5</div>
-              <div className="text-sm text-[#666] leading-none">up to 2,000 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 3,000 words</div>
             </div>
 
             <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
-              Editing & proofreading for medium texts.
-            </p>
-
-            {/* ★ NEW */}
-            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
-              One-time payment — no subscription.
+              Ideal for full landing pages, sales letters, blog posts, and case studies.
             </p>
 
             <a
@@ -104,7 +92,7 @@ export default function PricingPage() {
               motion-safe:hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(0,0,0,0.10)]
               active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]"
             >
-              Choose €5 plan
+              Choose €5 · pay once
             </a>
           </div>
         </div>
@@ -120,16 +108,11 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col grow">
             <div className="flex items-end gap-2">
               <div className="text-5xl font-semibold leading-none">€8</div>
-              <div className="text-sm text-[#666] leading-none">up to 3,000 words</div>
+              <div className="text-sm text-[#666] leading-none">up to 5,000 words</div>
             </div>
 
             <p className="mt-6 text-sm text-[#333] leading-relaxed pl-1.5 sm:pl-2">
-              Editing & proofreading for longer texts.
-            </p>
-
-            {/* ★ NEW */}
-            <p className="mt-1 text-xs text-neutral-500 pl-1.5 sm:pl-2">
-              One-time payment — no subscription.
+              For longer documents: multi-section pages, reports, or detailed articles.
             </p>
 
             <a
@@ -140,17 +123,11 @@ export default function PricingPage() {
               motion-safe:hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(0,0,0,0.10)]
               active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]"
             >
-              Choose €8 plan
+              Choose €8 · pay once
             </a>
           </div>
         </div>
-
       </section>
-
-      {/* 🔥 New clarifying text under all plans */}
-      <p className="mt-4 text-xs text-neutral-500 text-center">
-        One-time payment per document – no subscription, no recurring charges.
-      </p>
 
       {/* FOOTNOTE */}
       <p className="mt-12 text-center text-sm text-[#666] font-medium">
