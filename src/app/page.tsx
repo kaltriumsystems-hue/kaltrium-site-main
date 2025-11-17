@@ -68,20 +68,29 @@ if (MAINTENANCE) {
 
 
         {/* CTA buttons (живые) */}
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <a
-            href="/upload"
-            className="rounded-2xl bg-[#d6c4a3] text-black px-8 py-3 font-semibold shadow-[0_8px_24px_rgba(214,196,163,0.5)] hover:shadow-[0_12px_32px_rgba(214,196,163,0.6)] active:scale-[0.98] transition"
-          >
-            Try now
-          </a>
-          <a
-            href="/pricing"
-            className="rounded-2xl border border-[#c8c8c8] bg-white/80 px-8 py-3 font-medium hover:border-[#a0a0a0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)] active:scale-[0.98] transition"
-          >
-            View pricing
-          </a>
-        </div>
+       <div className="mt-8 flex flex-wrap justify-center gap-4">
+  <a
+    href="/upload"
+    className="rounded-2xl bg-[#d6c4a3] text-black px-8 py-3 font-semibold shadow-[0_8px_24px_rgba(214,196,163,0.5)] hover:shadow-[0_12px_32px_rgba(214,196,163,0.6)] active:scale-[0.98] transition"
+  >
+    Try now
+  </a>
+
+  <a
+    href="/pricing"
+    className="rounded-2xl border border-[#c8c8c8] bg-white/80 px-8 py-3 font-medium hover:border-[#a0a0a0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)] active:scale-[0.98] transition"
+  >
+    View pricing
+  </a>
+
+  <a
+    href="/example.pdf"
+    target="_blank"
+    className="rounded-2xl border border-[#cfcfcf] bg-white/80 px-8 py-3 font-medium text-[#333] hover:border-[#a0a0a0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)] active:scale-[0.98] transition"
+  >
+    Example PDF
+  </a>
+</div>
 
         {/* 3 преимущества */}
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
