@@ -7,8 +7,8 @@ export default function CancelPage() {
         </h1>
 
         <p className="mt-3 text-sm text-[#555]">
-          Your payment was not completed.  
-          You can return and try again anytime.
+          Your payment wasn’t completed.<br />
+          You can return to the editor and try again anytime.
         </p>
 
         <a
@@ -21,3 +21,4 @@ export default function CancelPage() {
     </main>
   );
 }
+
