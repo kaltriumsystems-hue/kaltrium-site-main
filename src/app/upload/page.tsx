@@ -1,86 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
   "https://kaltrium-editor-bot.onrender.com";
 
-// читаем PDF в base64, чтобы отправить в Stripe-бекенд вместе с текстом
-function readFileAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-import { useMemo, useState } from "react";
-
-type Plan = {
-  name: string;
-  price: number;
-  maxWords: number;
-  border?: string;
-  bg?: string;
-};
-
-const PLANS: Plan[] = [
-  { name: "€3", price: 3, maxWords: 1000 },
-  { name: "€5", price: 5, maxWords: 2000, border: "#cfcfcf", bg: "#fcfcfc" },
-  { name: "€8", price: 8, maxWords: 3000, border: "#d6c4a3", bg: "#fdfaf5" },
-];
-
-type CheckoutOptions = {
-  text: string;
-  lang: string;
-  words: number;
-  pdfFile: File | null;
-};
-
-// один обработчик оплаты — БЕЗ дублей
-async function handlePay(price: number, opts: CheckoutOptions) {
-  const { text, lang, words, pdfFile } = opts;
-
-  try {
-    let fileBase64: string | null = null;
-
-    // если загружен PDF – кодируем его, иначе отправляем только текст
-    if (pdfFile) {
-      const dataUrl = await readFileAsDataURL(pdfFile);
-      fileBase64 = dataUrl.split(",")[1] || dataUrl;
-    }
-
-    const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        price,
-        text,
-        lang,
-        words,
-        file: fileBase64,
-      }),
-    });
-
-    if (!res.ok) {
-      console.error("Stripe error", await res.text());
-      alert("Payment failed. Please try again.");
-      return;
-    }
-
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url; // редирект на Stripe Checkout
-    } else {
-      alert("No checkout URL returned.");
-    }
-  } catch (e) {
-    console.error(e);
-    alert("Payment error. Please try again.");
-  }
-}
-
-
+const FIXED_PRICE = 5;
 
 // Подсчёт слов
 function countWords(text: string) {
@@ -96,76 +22,41 @@ function clampToWordLimit(input: string, limit = 3000) {
     input
       .replace(/[\u200B-\u200D\uFEFF]/g, "")
       .trim()
-      .match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g) || [];
+      .match(
+        /[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g
+      ) || [];
   if (parts.length <= limit) return input;
   return parts.slice(0, limit).join(" ");
-}
-
-function selectPlan(words: number): Plan | null {
-  if (words === 0) return null;
-  if (words <= 1000) return PLANS[0];
-  if (words <= 2000) return PLANS[1];
-  if (words <= 3000) return PLANS[2];
-  return null;
 }
 
 // Тип ответа превью под новый backend
 type PreviewResponse = {
   ok: boolean;
   lang: string;
-  qa: { grammar: number; clarity: number; tone: number; consistency: number };
-  avg: number;
+  qa: {
+    grammar: number;
+    clarity: number;
+    tone: number;
+    consistency: number;
+  } | null;
+  avg: number | null;
   preview: string;
-  words: number; // <— важное поле для PDF
+  words: number;
   error?: string;
 };
 
 export default function UploadPage() {
   const [text, setText] = useState("");
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-
   const [apiError, setApiError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const [isPdfLoading] = useState(false); // пока не используем загрузку PDF, но оставляем стейт
+  const [isPayLoading, setIsPayLoading] = useState(false);
 
-  // ВАЖНО: если PDF → берём количество слов из previewData.words
-  const words = useMemo(() => {
-    if (pdfFile) {
-      return previewData?.words ?? 0;
-    }
-    return countWords(text);
-  }, [text, pdfFile, previewData]);
-
-  const plan = useMemo(() => selectPlan(words), [words]);
+  const words = useMemo(() => countWords(text), [text]);
   const overLimit = words > 3000;
 
-  // можно превью, если есть либо текст, либо PDF
-  const canPreview = (words > 0 || !!pdfFile) && !overLimit;
-
-  // Загрузка PDF
-  function handlePdfUpload(file: File | null) {
-    setPdfError(null);
-    setApiError(null);
-    setPreviewData(null);
-    setPdfFile(null);
-
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      setPdfError("PDF is too large (max 2 MB).");
-      return;
-    }
-    if (file.type !== "application/pdf") {
-      setPdfError("Only PDF files are allowed.");
-      return;
-    }
-
-    // Сохраняем файл и очищаем текст → включаем PDF-режим
-    setPdfFile(file);
-    setText("");
-  }
+  const canPreview = words > 0 && !overLimit;
+  const canPay = !!previewData && words > 0 && !overLimit;
 
   // PREVIEW
   async function handleGetPreview() {
@@ -175,25 +66,11 @@ export default function UploadPage() {
     setIsPreviewLoading(true);
 
     try {
-      let res: Response;
-
-      if (pdfFile && !text.trim()) {
-        // PREVIEW ДЛЯ PDF → multipart/form-data
-        const form = new FormData();
-        form.append("file", pdfFile);
-        form.append("preview", "true");
-        res = await fetch(`${API_BASE}/api/refine`, {
-          method: "POST",
-          body: form,
-        });
-      } else {
-        // PREVIEW ДЛЯ ТЕКСТА → JSON
-        res = await fetch(`${API_BASE}/api/refine`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, preview: true }),
-        });
-      }
+      const res = await fetch(`${API_BASE}/api/refine`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, preview: true }),
+      });
 
       if (!res.ok) {
         let msg = "Preview failed.";
@@ -222,12 +99,41 @@ export default function UploadPage() {
     }
   }
 
-  // ПОЛНЫЙ PDF — сейчас больше не используем на этой странице (чтобы не раздавать бесплатно),
-  // оставляем функцию на будущее, если перенесём её на /success после оплаты.
-  async function handleGetPdf() {
-    // заглушка: не вызываем тут полный PDF
-    alert("Full PDF is delivered after payment. Please complete the payment first.");
-    return;
+  // ОПЛАТА — фиксированная цена 5 €
+  async function handlePay() {
+    if (!canPay) return;
+    setIsPayLoading(true);
+    setApiError(null);
+
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          lang: "auto",
+          words,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Stripe error", await res.text());
+        setApiError("Payment failed. Please try again.");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // редирект на Stripe Checkout
+      } else {
+        setApiError("No checkout URL returned.");
+      }
+    } catch (e) {
+      console.error(e);
+      setApiError("Payment error. Please try again.");
+    } finally {
+      setIsPayLoading(false);
+    }
   }
 
   return (
@@ -243,57 +149,41 @@ export default function UploadPage() {
 
       {/* HEADER */}
       <header className="text-center mt-16">
-        <h1 className="text-5xl md:text-6xl font-semibold tracking-tight">Submit your text</h1>
+        <h1 className="text-5xl md:text-6xl font-semibold tracking-tight">
+          Submit your text
+        </h1>
         <p className="mt-3 text-lg text-[#444]">
-          Paste your business or marketing content to get an instant preview and price.
+          Paste your business or marketing content to get an instant preview
+          and a full refined version after payment.
         </p>
 
         <div className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#d6c4a3] px-6 py-3 text-black font-medium shadow-[0_8px_24px_rgba(214,196,163,0.35)]">
           <span>Instant preview included</span>
-          <span className="opacity-70">• we don’t store your texts</span>
+          <span className="opacity-70">• no account, no subscription</span>
         </div>
       </header>
 
       {overLimit && (
         <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
-          ⚠️ Your text exceeds the maximum limit (3,000 words). Please shorten it or split into multiple files.
+          ⚠️ Your text exceeds the maximum limit (3,000 words). Please shorten
+          it or split into multiple texts.
         </div>
       )}
 
       <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-8">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <p className="text-[#333] text-base">
-            Paste up to <strong>3,000 words</strong>. Price is detected automatically.
+            Paste up to <strong>3,000 words</strong>. One-time edit,{" "}
+            <strong>€{FIXED_PRICE}</strong>.
           </p>
-
-          <label
-            htmlFor="pdfUpload"
-            className="rounded-xl border border-[#d6c4a3] bg:white text-black px-5 py-2 text-sm font-medium cursor-pointer
-                       transition duration-200 ease-out
-                       hover:bg-[#fdfaf5] hover:shadow-[0_6px_16px_rgba(214,196,163,0.35)]
-                       active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6c4a3]"
-          >
-            Upload PDF instead
-          </label>
-          <input
-            id="pdfUpload"
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            onChange={(e) => handlePdfUpload(e.target.files?.[0] || null)}
-          />
         </div>
 
         <textarea
-          placeholder={
-            pdfFile
-              ? "PDF uploaded. You can still paste text here instead, if you want."
-              : "Paste your text here..."
-          }
+          placeholder="Paste your text here..."
           rows={12}
           value={text}
           onChange={(e) => {
-            setPdfFile(null); // если пользователь начинает печатать — выходим из PDF-режима
+            setPreviewData(null); // новый текст → старое превью не актуально
             setText(clampToWordLimit(e.target.value, 3000));
           }}
           className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
@@ -301,63 +191,57 @@ export default function UploadPage() {
         />
 
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Words */}
           <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">Words</div>
+            <div className="text-xs uppercase tracking-wide text-[#666]">
+              Words
+            </div>
             <div className="mt-1 text-2xl font-semibold">{words}</div>
           </div>
 
-          <div
-            className="rounded-2xl border p-4 text-center transition-colors duration-300"
-            style={{
-              borderColor: plan?.border ?? "#e5e7eb",
-              backgroundColor: plan?.bg ?? "white",
-            }}
-          >
-            <div className="text-xs uppercase tracking-wide text-[#666]">Detected plan</div>
-            <div className="mt-1 text-xl font-semibold">
-              {overLimit ? "—" : plan ? plan.name : pdfFile ? "Based on PDF" : "—"}
+          {/* Price (fixed) */}
+          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
+            <div className="text-xs uppercase tracking-wide text-[#666]">
+              Price
+            </div>
+            <div className="mt-1 text-2xl font-semibold">
+              {words > 0 && !overLimit ? `€${FIXED_PRICE}` : "—"}
             </div>
             <div className="text-xs text-[#666] mt-1">
-              {overLimit
-                ? "Limit is 3,000 words"
-                : plan
-                ? `up to ${plan.maxWords.toLocaleString()} words`
-                : pdfFile
-                ? "plan will be based on extracted words"
-                : "paste text to detect"}
+              One refined version, no subscription.
             </div>
           </div>
 
+          {/* Status */}
           <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">Price</div>
-            <div className="mt-1 text-2xl font-semibold">
-              {overLimit ? "—" : plan ? plan.name : pdfFile ? "€3–€8" : "—"}
+            <div className="text-xs uppercase tracking-wide text-[#666]">
+              Status
+            </div>
+            <div className="mt-1 text-sm font-semibold">
+              {previewData
+                ? "Preview ready"
+                : words > 0
+                ? "Waiting for preview"
+                : "Paste your text"}
             </div>
           </div>
         </div>
 
-        {pdfError && (
-          <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
-            {pdfError}
-          </p>
-        )}
         {apiError && (
           <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
             {apiError}
           </p>
         )}
-        {!overLimit && words === 0 && !pdfError && !apiError && !pdfFile && (
+        {!overLimit && words === 0 && !apiError && (
           <p className="mt-4 text-sm text-[#666]">
-            Start by pasting your text — or upload a PDF. We’ll show the plan and price automatically.
-          </p>
-        )}
-        {pdfFile && (
-          <p className="mt-4 text-sm text-[#444]">
-            PDF selected: <strong>{pdfFile.name}</strong>. You can request a preview or the full refined PDF.
+            Start by pasting your text. We’ll generate a free preview and show
+            your QA score before you pay.
           </p>
         )}
 
+        {/* КНОПКИ */}
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+          {/* PREVIEW */}
           <button
             disabled={!canPreview || isPreviewLoading}
             className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
@@ -371,19 +255,26 @@ export default function UploadPage() {
             {isPreviewLoading ? "Getting preview…" : "Get preview"}
           </button>
 
-         <button
-  disabled={true}
-  className="rounded-xl px-8 py-3 font-medium opacity-60 cursor-not-allowed"
-  onClick={() => alert("Payments are temporarily disabled.")}
->
-  Payments are temporarily disabled
-</button>
-
+          {/* PAY */}
+          <button
+            disabled={!canPay || isPayLoading}
+            className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
+              ${
+                canPay && !isPayLoading
+                  ? "border border-[#111] text-[#111] bg-white hover:bg-[#111] hover:text-white"
+                  : "bg-[#f3f3f3] text-[#999] cursor-not-allowed"
+              }`}
+            onClick={handlePay}
+          >
+            {isPayLoading
+              ? "Opening checkout…"
+              : "Unlock full text (€5)"}
+          </button>
         </div>
 
         <p className="mt-3 text-center text-xs text-[#666]">
-          Preview shows only the first part of your refined text. The full edited, branded PDF is delivered after
-          payment.
+          Preview shows only a part of your refined text and your QA score. The
+          full edited version is available after a one-time payment of €5.
         </p>
 
         {previewData && (
@@ -397,26 +288,32 @@ export default function UploadPage() {
                   {previewData.preview}
                 </p>
               </div>
-              <div className="text-sm text-right">
-                <p className="font-semibold">QA: {previewData.avg}/100</p>
-                <p className="text-xs text-[#666]">
-                  Grammar {previewData.qa.grammar} · Clarity {previewData.qa.clarity}
-                  <br />
-                  Tone {previewData.qa.tone} · Consistency {previewData.qa.consistency}
-                </p>
-              </div>
+              {previewData.qa && previewData.avg !== null && (
+                <div className="text-sm text-right">
+                  <p className="font-semibold">
+                    QA: {previewData.avg}/100
+                  </p>
+                  <p className="text-xs text-[#666]">
+                    Grammar {previewData.qa.grammar} · Clarity{" "}
+                    {previewData.qa.clarity}
+                    <br />
+                    Tone {previewData.qa.tone} · Consistency{" "}
+                    {previewData.qa.consistency}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
+
         <div className="mt-8 text-center">
           <span className="inline-flex items-center justify-center rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
           </span>
           <p className="mt-2 text-sm text-[#444]">
-            Processing is secure and immediately deleted. PDF (optional): max 2 MB, text-based only (no scans).
+            We don’t store your texts. Processing is secure and temporary.
           </p>
         </div>
-
       </section>
     </main>
   );
