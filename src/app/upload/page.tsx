@@ -106,6 +106,9 @@ export default function UploadPage() {
     setApiError(null);
 
     try {
+      // сохраняем текст, чтобы /success мог его забрать
+      localStorage.setItem("kaltrium_last_text", text);
+
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -266,9 +269,7 @@ export default function UploadPage() {
               }`}
             onClick={handlePay}
           >
-            {isPayLoading
-              ? "Opening checkout…"
-              : "Unlock full text (€5)"}
+            {isPayLoading ? "Opening checkout…" : "Unlock full text (€5)"}
           </button>
         </div>
 
@@ -318,6 +319,7 @@ export default function UploadPage() {
     </main>
   );
 }
+
 
 
 
