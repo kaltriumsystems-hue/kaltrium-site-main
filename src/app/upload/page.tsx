@@ -107,7 +107,9 @@ export default function UploadPage() {
 
     try {
       // сохраняем текст, чтобы /success смог его взять
-      localStorage.setItem("kaltrium_last_text", text);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("kaltrium_last_text", text);
+      }
 
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -154,9 +156,8 @@ export default function UploadPage() {
     if (!previewData) {
       return isPreviewLoading ? "Getting preview…" : "Get preview";
     }
-    // превью уже есть → кнопка для оплаты
     if (isPayLoading) return "Opening checkout…";
-    return "Unlock full text (€5)";
+    return "Refine text — €5";
   })();
 
   const primaryDisabled = (() => {
@@ -183,8 +184,7 @@ export default function UploadPage() {
           Submit your text
         </h1>
         <p className="mt-3 text-lg text-[#444]">
-          Paste your business or marketing content to get an instant preview
-          and, after payment, the full refined version.
+          Paste your business text to get a preview and, after payment, the full refined version ready to use.
         </p>
 
         <div className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#d6c4a3] px-6 py-3 text-black font-medium shadow-[0_8px_24px_rgba(214,196,163,0.35)]">
@@ -196,100 +196,84 @@ export default function UploadPage() {
       {overLimit && (
         <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
           ⚠️ Your text exceeds the maximum limit (3,000 words). Please shorten
-          it or split into multiple texts.
+          it or split it into multiple texts.
         </div>
       )}
 
-      <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-8">
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <p className="text-[#333] text-base">
-            Paste up to <strong>3,000 words</strong>. One-time edit,{" "}
-            <strong>€{FIXED_PRICE}</strong>.
-          </p>
-        </div>
+      {/* MAIN CARD */}
+      <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-6 md:p-8">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {/* LEFT: TEXT AREA */}
+          <div>
+            <p className="text-[#333] text-base">
+              Paste up to <strong>3,000 words</strong>. One-time edit for{" "}
+              <strong>€{FIXED_PRICE}</strong>.
+            </p>
 
-        <textarea
-          placeholder="Paste your text here..."
-          rows={12}
-          value={text}
-          onChange={(e) => {
-            setPreviewData(null); // новый текст → старое превью не актуально
-            setText(clampToWordLimit(e.target.value, 3000));
-          }}
-          className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
-                     focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
-        />
+            <textarea
+              placeholder="Paste your text here..."
+              rows={12}
+              value={text}
+              onChange={(e) => {
+                setPreviewData(null); // новый текст → старое превью не актуально
+                setText(clampToWordLimit(e.target.value, 3000));
+              }}
+              className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
+                         focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
+            />
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Words */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Words
+            <div className="mt-3 flex items-center justify-between text-xs text-[#666]">
+              <span>Words: {words} / 3,000</span>
+              {!overLimit && words === 0 && !apiError && (
+                <span>Paste your text to see a free preview and QA score.</span>
+              )}
             </div>
-            <div className="mt-1 text-2xl font-semibold">{words}</div>
+
+            {apiError && (
+              <p className="mt-3 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
+                {apiError}
+              </p>
+            )}
           </div>
 
-          {/* Price (fixed) */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Price
-            </div>
-            <div className="mt-1 text-2xl font-semibold">
-              {words > 0 && !overLimit ? `€${FIXED_PRICE}` : "—"}
-            </div>
-            <div className="text-xs text-[#666] mt-1">
-              One refined version, no subscription.
-            </div>
-          </div>
+          {/* RIGHT: OFFER CARD С ЗОЛОТОЙ КНОПКОЙ */}
+          <div className="rounded-2xl bg-white border border-[#e5e7eb] shadow-[0_8px_18px_rgba(0,0,0,0.04)] p-6 space-y-3">
+            <h3 className="text-xl font-semibold text-[#111]">
+              One-time refinement — €5
+            </h3>
 
-          {/* Status */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Status
-            </div>
-            <div className="mt-1 text-sm font-semibold">
-              {previewData
-                ? "Preview ready"
-                : words > 0
-                ? "Waiting for preview"
-                : "Paste your text"}
-            </div>
+            <p className="text-sm text-[#444]">
+              No subscription. No login. Instant delivery after payment.
+            </p>
+
+            <ul className="text-sm text-[#333] space-y-1 ml-1">
+              <li>• Full refined version of your text</li>
+              <li>• Grammar, clarity, tone & consistency</li>
+              <li>• Short summary + key recommendations</li>
+              <li>• Optimized for EN & DE business writing</li>
+              <li>• Download your refined text as a clean .txt</li>
+            </ul>
+
+            <button
+              onClick={handlePrimaryClick}
+              disabled={primaryDisabled}
+              className={`w-full mt-4 rounded-xl px-6 py-3 font-semibold transition duration-200
+                ${
+                  !primaryDisabled
+                    ? "bg-[#d4b572] text-black shadow-[0_8px_20px_rgba(212,181,114,0.45)] hover:bg-[#c6a665] active:scale-[0.98]"
+                    : "bg-[#f3f3f3] text-[#999] cursor-not-allowed"
+                }`}
+            >
+              {primaryLabel}
+            </button>
+
+            <p className="text-[11px] text-[#777] mt-1">
+              First we show you a short preview and QA score, then you confirm payment via Stripe.
+            </p>
           </div>
         </div>
 
-        {apiError && (
-          <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
-            {apiError}
-          </p>
-        )}
-        {!overLimit && words === 0 && !apiError && (
-          <p className="mt-4 text-sm text-[#666]">
-            Start by pasting your text. You’ll get a free preview and QA score
-            first; then you can unlock the full version for €5.
-          </p>
-        )}
-
-        {/* ОДНА КНОПКА */}
-        <div className="mt-8 flex justify-center">
-          <button
-            disabled={primaryDisabled}
-            className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
-              ${
-                !primaryDisabled
-                  ? "bg-[#d6c4a3] text-black shadow-[0_8px_20px_rgba(214,196,163,0.4)] hover:bg-[#cbb993] hover:shadow-[0_10px_24px_rgba(214,196,163,0.55)] active:scale-[0.98]"
-                  : "bg-[#f3f3f3] text-[#999] cursor-not-allowed shadow-none"
-              }`}
-            onClick={handlePrimaryClick}
-          >
-            {primaryLabel}
-          </button>
-        </div>
-
-        <p className="mt-3 text-center text-xs text-[#666]">
-          Preview shows only part of your refined text and your QA score. The
-          full edited version is available after a one-time payment of €5.
-        </p>
-
+        {/* PREVIEW BLOCK */}
         {previewData && (
           <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#fafafa] p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -319,7 +303,8 @@ export default function UploadPage() {
           </div>
         )}
 
-        <div className="mt-8 text-center">
+        {/* PRIVACY NOTE */}
+        <div className="mt-6 text-center">
           <span className="inline-flex items-center justify-center rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
             🔒 Secure & private
           </span>
