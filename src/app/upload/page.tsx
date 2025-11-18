@@ -1,37 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_KALTRIUM_API_URL ||
   "https://kaltrium-editor-bot.onrender.com";
 
-const FIXED_PRICE = 5;
+type Status = "idle" | "preview-loading" | "checkout-loading" | "ready" | "error";
 
-// Подсчёт слов
-function countWords(text: string) {
-  const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
-  if (!normalized) return 0;
-  const matches = normalized.match(/[A-Za-zÄÖÜäöüßЁА-Яёа-я0-9]+/gu);
-  return matches ? matches.length : 0;
-}
+type Plan = { name: string; price: number; maxWords: number; highlight?: boolean };
 
-// Ограничение по словам
-function clampToWordLimit(input: string, limit = 3000) {
-  const parts =
-    input
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
-      .trim()
-      .match(
-        /[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’-][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g
-      ) || [];
-  if (parts.length <= limit) return input;
-  return parts.slice(0, limit).join(" ");
-}
+const PLANS: Plan[] = [
+  { name: "€3", price: 3, maxWords: 1500 },
+  { name: "€5", price: 5, maxWords: 3000, highlight: true },
+  { name: "€8", price: 8, maxWords: 5000 },
+];
 
-// Тип ответа превью под новый backend
 type PreviewResponse = {
   ok: boolean;
+  mode: "preview";
   lang: string;
   qa: {
     grammar: number;
@@ -42,283 +29,357 @@ type PreviewResponse = {
   avg: number | null;
   preview: string;
   words: number;
+  restrictedWarning?: string | null;
   error?: string;
 };
 
 export default function UploadPage() {
   const [text, setText] = useState("");
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [lang, setLang] = useState<"auto" | "en" | "de" | "ru">("auto");
+  const [status, setStatus] = useState<Status>("idle");
+  const [error, setError] = useState<string | null>(null);
+
   const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const [isPayLoading, setIsPayLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-  const words = useMemo(() => countWords(text), [text]);
-  const overLimit = words > 3000;
+  // восстановить текст из localStorage, если вернулись после cancel на Stripe
+  useEffect(() => {
+    const stored = localStorage.getItem("kaltrium_last_text");
+    if (stored && !text) {
+      setText(stored);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canPreview = words > 0 && !overLimit;
-  const canPay = !!previewData && words > 0 && !overLimit;
+  const wordCount = useMemo(() => {
+    const normalized = text.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+    if (!normalized) return 0;
+    return normalized.split(/\s+/).length;
+  }, [text]);
 
-  // PREVIEW
-  async function handleGetPreview() {
-    if (!canPreview) return;
-    setApiError(null);
+  const maxPlanWords = selectedPlan?.maxWords ?? PLANS[1].maxWords;
+
+  const overPlanLimit = wordCount > maxPlanWords;
+
+  async function handlePreview() {
+    if (!text.trim()) {
+      setError("Please paste your text first.");
+      return;
+    }
+
+    setStatus("preview-loading");
+    setError(null);
     setPreviewData(null);
-    setIsPreviewLoading(true);
 
     try {
       const res = await fetch(`${API_BASE}/api/refine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, preview: true }),
+        body: JSON.stringify({ text, lang, preview: true }),
       });
 
       if (!res.ok) {
-        let msg = "Preview failed.";
+        let msg = "Failed to load preview.";
         try {
-          const data = await res.json();
-          if (data?.error) msg = data.error;
+          const t = await res.json();
+          if (t?.error) msg = t.error;
         } catch {
           // ignore
         }
-        setApiError(msg);
+        setStatus("error");
+        setError(msg);
         return;
       }
 
-      const data = (await res.json()) as PreviewResponse;
-      if (!data.ok) {
-        setApiError(data.error || "Preview failed.");
+      const json = (await res.json()) as PreviewResponse;
+      if (!json.ok) {
+        setStatus("error");
+        setError(json.error || "Failed to load preview.");
         return;
       }
 
-      setPreviewData(data);
-    } catch (err) {
-      console.error(err);
-      setApiError("Network error. Please try again.");
-    } finally {
-      setIsPreviewLoading(false);
+      setPreviewData(json);
+      setStatus("ready");
+    } catch (e) {
+      console.error("Preview error:", e);
+      setStatus("error");
+      setError("Network error. Please try again.");
     }
   }
 
-  // ОПЛАТА — фиксированная цена 5 €
-  async function handlePay() {
-    if (!canPay) return;
-    setIsPayLoading(true);
-    setApiError(null);
+  async function handleCheckout() {
+    if (!text.trim()) {
+      setError("Please paste your text before payment.");
+      return;
+    }
+    if (!selectedPlan) {
+      setError("Please select a plan.");
+      return;
+    }
+    if (overPlanLimit) {
+      setError(
+        `Your text is too long for the selected plan (${wordCount} words > ${maxPlanWords}).`
+      );
+      return;
+    }
+
+    setStatus("checkout-loading");
+    setError(null);
 
     try {
-      // сохраняем текст, чтобы /success мог его забрать
+      // ключевая строка для success-страницы:
       localStorage.setItem("kaltrium_last_text", text);
 
-      const res = await fetch("/api/create-checkout-session", {
+      const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
-          lang: "auto",
-          words,
+          price: selectedPlan.price,
         }),
       });
 
       if (!res.ok) {
-        console.error("Stripe error", await res.text());
-        setApiError("Payment failed. Please try again.");
+        let msg = "Failed to start checkout.";
+        try {
+          const t = await res.json();
+          if (t?.error) msg = t.error;
+        } catch {
+          // ignore
+        }
+        setStatus("error");
+        setError(msg);
         return;
       }
 
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url; // редирект на Stripe Checkout
-      } else {
-        setApiError("No checkout URL returned.");
+      const json = await res.json();
+      if (!json?.url) {
+        setStatus("error");
+        setError("No checkout URL returned from server.");
+        return;
       }
+
+      window.location.href = json.url;
     } catch (e) {
-      console.error(e);
-      setApiError("Payment error. Please try again.");
-    } finally {
-      setIsPayLoading(false);
+      console.error("Checkout error:", e);
+      setStatus("error");
+      setError("Network error. Please try again.");
     }
   }
 
   return (
-    <main className="relative mx-auto max-w-3xl px-6 pt-8 pb-20 text-[#111]">
-      {/* BACK BUTTON */}
-      <a
-        href="/"
-        className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-xl border border-[#d6c4a3] px-4 py-1.5 text-sm font-medium text-[#111]
-                   hover:bg-[#faf8f4] transition"
-      >
-        ← Back to home
-      </a>
-
-      {/* HEADER */}
-      <header className="text-center mt-16">
-        <h1 className="text-5xl md:text-6xl font-semibold tracking-tight">
-          Submit your text
-        </h1>
-        <p className="mt-3 text-lg text-[#444]">
-          Paste your business or marketing content to get an instant preview
-          and a full refined version after payment.
-        </p>
-
-        <div className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#d6c4a3] px-6 py-3 text-black font-medium shadow-[0_8px_24px_rgba(214,196,163,0.35)]">
-          <span>Instant preview included</span>
-          <span className="opacity-70">• no account, no subscription</span>
-        </div>
-      </header>
-
-      {overLimit && (
-        <div className="mt-6 rounded-xl border border-[#fde68a] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a6700]">
-          ⚠️ Your text exceeds the maximum limit (3,000 words). Please shorten
-          it or split into multiple texts.
-        </div>
-      )}
-
-      <section className="mt-6 bg-white border border-[#ddd] rounded-2xl shadow-[0_8px_22px_rgba(0,0,0,0.05)] p-8">
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <p className="text-[#333] text-base">
-            Paste up to <strong>3,000 words</strong>. One-time edit,{" "}
-            <strong>€{FIXED_PRICE}</strong>.
+    <main className="min-h-screen bg-[#f5f3ef] flex items-center justify-center px-4 py-10">
+      <div className="max-w-6xl w-full bg-white/90 backdrop-blur rounded-3xl shadow-[0_18px_45px_rgba(15,15,15,0.08)] border border-[#e3ded4] px-8 py-8 md:px-10 md:py-10">
+        {/* Header */}
+        <header className="mb-8 text-center md:text-left">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#151515]">
+            Kaltrium Editor · Refine your business & marketing text
+          </h1>
+          <p className="mt-2 text-sm md:text-[15px] text-[#5b5b5b] max-w-2xl">
+            Paste your English, German or Russian business text, get a quick free
+            preview, then unlock a full refined version with a detailed quality report.
           </p>
-        </div>
+        </header>
 
-        <textarea
-          placeholder="Paste your text here..."
-          rows={12}
-          value={text}
-          onChange={(e) => {
-            setPreviewData(null); // новый текст → старое превью не актуально
-            setText(clampToWordLimit(e.target.value, 3000));
-          }}
-          className="mt-5 w-full resize-none rounded-xl border border-[#cfcfcf] bg-[#fafafa] px-4 py-3 text-sm text-[#111]
-                     focus:border-[#d6c4a3] focus:ring-1 focus:ring-[#d6c4a3] outline-none transition"
-        />
-
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Words */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Words
-            </div>
-            <div className="mt-1 text-2xl font-semibold">{words}</div>
-          </div>
-
-          {/* Price (fixed) */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Price
-            </div>
-            <div className="mt-1 text-2xl font-semibold">
-              {words > 0 && !overLimit ? `€${FIXED_PRICE}` : "—"}
-            </div>
-            <div className="text-xs text-[#666] mt-1">
-              One refined version, no subscription.
-            </div>
-          </div>
-
-          {/* Status */}
-          <div className="rounded-xl bg-white border border-zinc-200 p-4 text-center">
-            <div className="text-xs uppercase tracking-wide text-[#666]">
-              Status
-            </div>
-            <div className="mt-1 text-sm font-semibold">
-              {previewData
-                ? "Preview ready"
-                : words > 0
-                ? "Waiting for preview"
-                : "Paste your text"}
-            </div>
-          </div>
-        </div>
-
-        {apiError && (
-          <p className="mt-4 text-sm text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
-            {apiError}
-          </p>
-        )}
-        {!overLimit && words === 0 && !apiError && (
-          <p className="mt-4 text-sm text-[#666]">
-            Start by pasting your text. We’ll generate a free preview and show
-            your QA score before you pay.
-          </p>
-        )}
-
-        {/* КНОПКИ */}
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          {/* PREVIEW */}
-          <button
-            disabled={!canPreview || isPreviewLoading}
-            className={`rounded-xl px-8 py-3 font-semibold transition duration-200 ease-out
-              ${
-                canPreview && !isPreviewLoading
-                  ? "bg-[#d6c4a3] text-black shadow-[0_8px_20px_rgba(214,196,163,0.4)] hover:bg-[#cbb993] hover:shadow-[0_10px_24px_rgba(214,196,163,0.55)] active:scale-[0.98]"
-                  : "bg-[#f3f3f3] text-[#999] cursor-not-allowed shadow-none"
-              }`}
-            onClick={handleGetPreview}
-          >
-            {isPreviewLoading ? "Getting preview…" : "Get preview"}
-          </button>
-
-          {/* PAY */}
-          <button
-            disabled={!canPay || isPayLoading}
-            className={`rounded-xl px-8 py-3 font-medium transition duration-200 ease-out
-              ${
-                canPay && !isPayLoading
-                  ? "border border-[#111] text-[#111] bg-white hover:bg-[#111] hover:text-white"
-                  : "bg-[#f3f3f3] text-[#999] cursor-not-allowed"
-              }`}
-            onClick={handlePay}
-          >
-            {isPayLoading ? "Opening checkout…" : "Unlock full text (€5)"}
-          </button>
-        </div>
-
-        <p className="mt-3 text-center text-xs text-[#666]">
-          Preview shows only a part of your refined text and your QA score. The
-          full edited version is available after a one-time payment of €5.
-        </p>
-
-        {previewData && (
-          <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#fafafa] p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* LEFT: Text input */}
+          <section className="lg:col-span-3">
+            <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#666]">
-                  Preview · Language: {previewData.lang.toUpperCase()}
+                <p className="text-xs uppercase tracking-[0.12em] text-[#8a8170]">
+                  Your text
                 </p>
-                <p className="mt-1 text-sm text-[#333] whitespace-pre-line">
-                  {previewData.preview}
+                <p className="text-[11px] text-[#a8a29e]">
+                  We don’t store your content permanently.
                 </p>
               </div>
-              {previewData.qa && previewData.avg !== null && (
-                <div className="text-sm text-right">
-                  <p className="font-semibold">
-                    QA: {previewData.avg}/100
-                  </p>
-                  <p className="text-xs text-[#666]">
-                    Grammar {previewData.qa.grammar} · Clarity{" "}
-                    {previewData.qa.clarity}
-                    <br />
-                    Tone {previewData.qa.tone} · Consistency{" "}
-                    {previewData.qa.consistency}
-                  </p>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
+                  <span>Language</span>
+                  <select
+                    value={lang}
+                    onChange={(e) =>
+                      setLang(e.target.value as "auto" | "en" | "de" | "ru")
+                    }
+                    className="border border-[#d4cbb8] rounded-full px-2.5 py-1 text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-[#d6c4a3]"
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="en">EN</option>
+                    <option value="de">DE</option>
+                    <option value="ru">RU</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#e3ded4] bg-[#fbfaf8]">
+              <textarea
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  if (status === "error") setStatus("idle");
+                }}
+                placeholder="Paste your business email, landing page section, LinkedIn post, or marketing copy here..."
+                className="w-full min-h-[260px] md:min-h-[320px] resize-none rounded-2xl bg-transparent px-4 py-3 text-sm md:text-[15px] text-[#151515] placeholder:text-[#b0a79b] focus:outline-none"
+              />
+              <div className="flex items-center justify-between px-4 py-2 border-t border-[#e9e4da] text-[11px] text-[#8a8170]">
+                <span>
+                  Words:&nbsp;
+                  <span className={wordCount > maxPlanWords ? "text-[#b91c1c]" : ""}>
+                    {wordCount}
+                  </span>
+                  {selectedPlan && (
+                    <>
+                      {" "}
+                      / {maxPlanWords} (selected plan)
+                    </>
+                  )}
+                </span>
+                <span>Max technical limit: 3000 words</span>
+              </div>
+            </div>
+
+            {/* Preview / error */}
+            <div className="mt-4 flex flex-col gap-3">
+              {error && (
+                <div className="rounded-xl border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-[12px] text-[#b91c1c]">
+                  {error}
                 </div>
               )}
-            </div>
-          </div>
-        )}
 
-        <div className="mt-8 text-center">
-          <span className="inline-flex items-center justify-center rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
-            🔒 Secure & private
-          </span>
-          <p className="mt-2 text-sm text-[#444]">
-            We don’t store your texts. Processing is secure and temporary.
-          </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handlePreview}
+                  disabled={status === "preview-loading" || !text.trim()}
+                  className="inline-flex items-center justify-center rounded-full px-4 py-2.5 text-xs font-medium bg-[#151515] text-white hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {status === "preview-loading"
+                    ? "Generating free preview…"
+                    : "Get free preview"}
+                </button>
+
+                <button
+                  onClick={handleCheckout}
+                  disabled={
+                    status === "checkout-loading" ||
+                    !text.trim() ||
+                    !selectedPlan ||
+                    overPlanLimit
+                  }
+                  className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-xs font-medium bg-[#d6c4a3] text-[#151515] hover:bg-[#cbb793] disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {status === "checkout-loading"
+                    ? "Redirecting to payment…"
+                    : "Proceed to payment"}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT: Plans + preview card */}
+          <section className="lg:col-span-2 flex flex-col gap-5">
+            {/* Plans */}
+            <div className="rounded-2xl border border-[#e3ded4] bg-[#fdfbf7] px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8a8170] mb-3">
+                Choose your plan
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {PLANS.map((plan) => {
+                  const isSelected = selectedPlan?.price === plan.price;
+                  return (
+                    <button
+                      key={plan.price}
+                      type="button"
+                      onClick={() => setSelectedPlan(plan)}
+                      className={[
+                        "flex flex-col items-start rounded-2xl border px-3.5 py-3 text-left transition",
+                        plan.highlight
+                          ? "border-[#d6c4a3] bg-[#fdf8f1]"
+                          : "border-[#e2ddd3] bg-white",
+                        isSelected ? "ring-2 ring-[#151515]" : "hover:border-[#c4b79f]",
+                      ].join(" ")}
+                    >
+                      <span className="text-[13px] font-semibold text-[#151515]">
+                        {plan.name}
+                      </span>
+                      <span className="mt-0.5 text-[11px] text-[#7a7467]">
+                        Up to {plan.maxWords.toLocaleString()} words
+                      </span>
+                      <span className="mt-1 text-[10px] text-[#a8a29e]">
+                        One refined text + QA report
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[11px] text-[#9f9585]">
+                You’ll be redirected to a secure Stripe checkout. After payment, your
+                full refined text and QA report will appear instantly on the success page.
+              </p>
+            </div>
+
+            {/* Preview card */}
+            <div className="rounded-2xl border border-[#e3ded4] bg-[#fbfaf8] px-4 py-4 flex-1 flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#8a8170]">
+                  Free preview
+                </p>
+                {previewData && (
+                  <span className="text-[11px] text-[#918779]">
+                    {previewData.words} words ·{" "}
+                    {previewData.lang ? previewData.lang.toUpperCase() : "AUTO"}
+                  </span>
+                )}
+              </div>
+
+              {!previewData && status !== "preview-loading" && (
+                <p className="text-[12px] text-[#75706a]">
+                  Click <span className="font-medium">“Get free preview”</span> to see how
+                  Kaltrium Editor improves your text before you pay.
+                </p>
+              )}
+
+              {status === "preview-loading" && (
+                <p className="text-[12px] text-[#75706a]">
+                  Analysing your text and preparing a short preview…
+                </p>
+              )}
+
+              {previewData && (
+                <>
+                  {previewData.qa && (
+                    <div className="mb-3 mt-1 flex flex-wrap gap-2 text-[11px] text-[#6f6a63]">
+                      <span>
+                        Grammar {previewData.qa.grammar}/100 · Clarity{" "}
+                        {previewData.qa.clarity}/100
+                      </span>
+                      <span>
+                        Tone {previewData.qa.tone}/100 · Consistency{" "}
+                        {previewData.qa.consistency}/100
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mt-1 rounded-xl border border-[#e3ded4] bg-white px-3 py-2 max-h-[160px] overflow-auto">
+                    <p className="text-[12px] text-[#151515] whitespace-pre-wrap">
+                      {previewData.preview}
+                    </p>
+                  </div>
+
+                  {previewData.restrictedWarning && (
+                    <p className="mt-2 text-[11px] text-[#92400e]">
+                      {previewData.restrictedWarning}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
+
 
 
 
