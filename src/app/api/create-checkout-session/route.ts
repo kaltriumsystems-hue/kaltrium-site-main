@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const resp = await fetch(`${backendURL}/create-checkout-session`, {
+    const resp = await fetch(`${backendURL}/api/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
