@@ -1,13 +1,13 @@
 export const metadata = {
   title: "Kaltrium — AI Proofreader & Editor for Business & Marketing Texts",
   description:
-    "Kaltrium instantly edits and proofreads business and marketing texts – available in English and German. Get a polished, marketing-ready PDF with refined tone, clarity and style in minutes.",
+    "Kaltrium instantly edits and proofreads business and marketing texts in English and German. Get a refined, marketing-ready version of your text with clear tone, structure and style in minutes.",
   keywords:
-    "AI proofreader, business editing, marketing text correction, PDF proofreading, AI editor, professional writing, style improvement",
+    "AI proofreader, business editing, marketing text correction, AI editor, professional writing, style improvement",
   openGraph: {
     title: "Kaltrium — Smart AI Proofreader & Editor",
     description:
-      "AI-powered Proofreader & Editor for business and marketing text – supports English and German. Upload your text and receive a polished, branded PDF – instantly.",
+      "AI-powered Proofreader & Editor for business and marketing text – supports English and German. Upload your text and receive a clean, refined version ready to use in your campaigns and documents.",
     url: "https://kaltrium.com",
     siteName: "Kaltrium",
     images: [
@@ -73,14 +73,10 @@ export default function Page() {
           >
             Legal & Privacy
           </a>
-          <a
-            href="/updates"
-            className="rounded-xl px-3 py-1 transition-all duration-200 hover:bg-[#fdfaf5] hover:text-black hover:shadow-[0_2px_10px_rgba(214,196,163,0.25)] active:scale-[0.98]"
-          >
-            Updates
-          </a>
+          {/* Updates temporarily hidden */}
         </nav>
       </header>
+
       {/* HERO */}
       <section className="mx-auto max-w-6xl px-6 pt-12 pb-16 text-center">
         <h2 className="text-5xl md:text-6xl font-semibold leading-tight">
@@ -93,66 +89,44 @@ export default function Page() {
           clarity, confidence, and precision. Supports EN & DE.
         </p>
 
-        {/* CTA buttons — все на одной базе */}
-      <div className="mt-8 flex flex-wrap justify-center gap-4">
+        {/* CTA buttons */}
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          {/* Try now — gold */}
+          <a
+            href="/upload"
+            className="
+              inline-flex items-center justify-center
+              min-w-[170px] px-8 py-3
+              rounded-2xl font-semibold
+              bg-[#d6c4a3] text-black
+              border border-[#d6c4a3]
+              shadow-[0_6px_18px_rgba(214,196,163,0.40)]
+              hover:shadow-[0_8px_24px_rgba(214,196,163,0.55)]
+              active:scale-[0.98]
+              transition
+            "
+          >
+            Try now
+          </a>
 
-  {/* Try now — gold */}
-  <a
-    href="/upload"
-    className="
-      inline-flex items-center justify-center
-      min-w-[170px] px-8 py-3
-      rounded-2xl font-semibold
-      bg-[#d6c4a3] text-black
-      border border-[#d6c4a3]
-      shadow-[0_6px_18px_rgba(214,196,163,0.40)]
-      hover:shadow-[0_8px_24px_rgba(214,196,163,0.55)]
-      active:scale-[0.98]
-      transition
-    "
-  >
-    Try now
-  </a>
-
-  {/* View pricing — clean white */}
-  <a
-    href="/pricing"
-    className="
-      inline-flex items-center justify-center
-      min-w-[170px] px-8 py-3
-      rounded-2xl font-semibold
-      bg-white text-[#222]
-      border border-[#d4d4d4]
-      shadow-[0_6px_18px_rgba(0,0,0,0.06)]
-      hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)]
-      active:scale-[0.98]
-      transition
-    "
-  >
-    View pricing
-  </a>
-
-  {/* Example PDF — real silver */}
-  <a
-    href="/example.pdf"
-    target="_blank"
-    className="
-      inline-flex items-center justify-center
-      min-w-[170px] px-8 py-3
-      rounded-2xl font-semibold
-      bg-[#cfcfcf] text-[#111]
-      border border-[#b8b8b8]
-      shadow-[0_6px_18px_rgba(0,0,0,0.10)]
-      hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)]
-      active:scale-[0.98]
-      transition
-    "
-  >
-    Example PDF
-  </a>
-
-</div>
-
+          {/* View pricing — clean white */}
+          <a
+            href="/pricing"
+            className="
+              inline-flex items-center justify-center
+              min-w-[170px] px-8 py-3
+              rounded-2xl font-semibold
+              bg-white text-[#222]
+              border border-[#d4d4d4]
+              shadow-[0_6px_18px_rgba(0,0,0,0.06)]
+              hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)]
+              active:scale-[0.98]
+              transition
+            "
+          >
+            View pricing
+          </a>
+        </div>
 
         {/* 3 преимущества */}
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
@@ -177,15 +151,15 @@ export default function Page() {
 
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)] border-t-4 border-[#b8b8b8]">
             <div className="text-xl font-semibold text-black mb-2">
-              Instant PDF / No Subscription Required
+              Instant Result / No Subscription Required
             </div>
             <p className="text-[#444] text-sm leading-relaxed">
-              Receive a clean, branded PDF in minutes — no registration needed.
+              Upload your text and download the refined version within minutes
+              — one-time payment, no account or subscription needed.
             </p>
           </div>
         </div>
       </section>
-
 
       {/* SECURE & PRIVATE (перед футером) */}
       <div className="mt-16 flex flex-col items-center gap-1 pb-10">
@@ -205,10 +179,6 @@ export default function Page() {
           © {new Date().getFullYear()} Kaltrium ·{" "}
           <a href="/policy" className="underline hover:text-[#111] transition">
             Legal & Privacy
-          </a>{" "}
-          ·{" "}
-          <a href="/updates" className="underline hover:text-[#111] transition">
-            Updates
           </a>
         </p>
       </footer>
