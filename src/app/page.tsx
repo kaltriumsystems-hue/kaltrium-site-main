@@ -48,18 +48,11 @@ export default function Page() {
         </h1>
 
         <nav className="flex flex-wrap gap-4 text-sm text-[#333]">
-          {/* Home убрали на главной */}
           <a
             href="/upload"
             className="rounded-xl px-3 py-1 transition-all duration-200 hover:bg-[#fdfaf5] hover:text-black hover:shadow-[0_2px_10px_rgba(214,196,163,0.25)] active:scale-[0.98]"
           >
             Upload
-          </a>
-          <a
-            href="/pricing"
-            className="rounded-xl px-3 py-1 transition-all duration-200 hover:bg-[#fdfaf5] hover:text-black hover:shadow-[0_2px_10px_rgba(214,196,163,0.25)] active:scale-[0.98]"
-          >
-            Pricing
           </a>
           <a
             href="/contact"
@@ -73,7 +66,6 @@ export default function Page() {
           >
             Legal & Privacy
           </a>
-          {/* Updates temporarily hidden */}
         </nav>
       </header>
 
@@ -89,9 +81,8 @@ export default function Page() {
           clarity, confidence, and precision. Supports EN & DE.
         </p>
 
-        {/* CTA buttons */}
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          {/* Try now — gold */}
+        {/* SINGLE CTA BUTTON */}
+        <div className="mt-8 flex justify-center">
           <a
             href="/upload"
             className="
@@ -107,24 +98,6 @@ export default function Page() {
             "
           >
             Try now
-          </a>
-
-          {/* View pricing — clean white */}
-          <a
-            href="/pricing"
-            className="
-              inline-flex items-center justify-center
-              min-w-[170px] px-8 py-3
-              rounded-2xl font-semibold
-              bg-white text-[#222]
-              border border-[#d4d4d4]
-              shadow-[0_6px_18px_rgba(0,0,0,0.06)]
-              hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)]
-              active:scale-[0.98]
-              transition
-            "
-          >
-            View pricing
           </a>
         </div>
 
@@ -154,21 +127,21 @@ export default function Page() {
               Instant Result / No Subscription Required
             </div>
             <p className="text-[#444] text-sm leading-relaxed">
-              Upload your text and download the refined version within minutes
-              — one-time payment, no account or subscription needed.
+              Upload your text and download the refined version within minutes —
+              one-time payment, no registration needed.
             </p>
           </div>
         </div>
       </section>
 
-      {/* SECURE & PRIVATE (перед футером) */}
+      {/* SECURE & PRIVATE */}
       <div className="mt-16 flex flex-col items-center gap-1 pb-10">
         <span className="rounded-full bg-[#fdfaf5] border border-[#d6c4a3] px-4 py-1 text-sm font-medium text-[#111] shadow-sm">
           🔒 Secure & private
         </span>
         <p className="text-sm text-[#555] text-center max-w-md">
-          We don’t store your data — all texts and files are processed
-          instantly and deleted after completion.
+          We don’t store your data — all texts are processed instantly and
+          deleted after completion.
         </p>
       </div>
 
@@ -185,6 +158,7 @@ export default function Page() {
     </main>
   );
 }
+
 
 
 
